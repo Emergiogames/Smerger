@@ -1,0 +1,7 @@
+# Environments
+.env
+
+docker-compose.yaml
+nginx/
+buildspec.yml
+uploads/
