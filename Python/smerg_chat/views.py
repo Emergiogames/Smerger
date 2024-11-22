@@ -6,14 +6,14 @@ from rest_framework.response import Response
 from django.db.models import Q
 from .utils.enc_utils import *
 from smerg_app.utils.async_serial_utils import *
+from smerg_app.utils.check_utils import *
 
 # Rooms
 class Rooms(APIView):
     async def get(self, request):
         if request.headers.get('token'):
-            exist = await UserProfile.objects.filter(auth_token=request.headers.get('token')).aexists()
-            user = await UserProfile.objects.aget(auth_token=request.headers.get('token'))
-            if exist and not user.block:
+            exists, user = await check_user(request.headers.get('token'))
+            if exists:
                 rooms = [room async for room in Room.objects.filter(Q(first_person=user) | Q(second_person=user)).order_by('-id')] 
                 serialized_data = await serialize_data(rooms, RoomSerial)
                 return Response(serialized_data)
@@ -22,9 +22,8 @@ class Rooms(APIView):
 
     async def post(self, request):
         if request.headers.get('token'):
-            exist = await UserProfile.objects.filter(auth_token=request.headers.get('token')).aexists()
-            user = await UserProfile.objects.aget(auth_token=request.headers.get('token'))
-            if exist and not user.block:
+            exists, user = await check_user(request.headers.get('token'))
+            if exists:
                 reciever = await SaleProfiles.objects.aget(id=request.data.get('receiverId')).user
                 image = await SaleProfiles.objects.aget(id=request.data.get('receiverId')).user.image.url if SaleProfiles.objects.get(id=request.data.get('receiverId')).user.image and hasattr(SaleProfiles.objects.get(id=request.data.get('receiverId')).user.image, 'url') else None
                 room_exist = await Room.objects.filter(Q(first_person=user, second_person=reciever) | Q(second_person=user, first_person=reciever)).aexists()
@@ -40,9 +39,8 @@ class Rooms(APIView):
 class Chat(APIView):
     async def get(self, request):
         if request.headers.get('token'):
-            exist = await UserProfile.objects.filter(auth_token=request.headers.get('token')).aexists()
-            user = await UserProfile.objects.aget(auth_token=request.headers.get('token'))
-            if exist and not user.block:
+            exists, user = await check_user(request.headers.get('token'))
+            if exists:
                 chats = [chat async for chat in ChatMessage.objects.filter(Q(first_person=user) | Q(second_person=user)).order_by('-id')] 
                 serialized_data = await serialize_data(chats, ChatSerial)
                 return Response(serialized_data)
