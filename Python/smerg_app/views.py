@@ -182,13 +182,10 @@ class ChangePwd(APIView):
         return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
 
 class Profiles(APIView):
-						 
     @swagger_auto_schema(operation_description="Fetch profiles based on type and user subscription.",
         manual_parameters=[openapi.Parameter('type', openapi.IN_QUERY,description="Type of the profile to fetch",type=openapi.TYPE_STRING, required=True),openapi.Parameter('show_all', openapi.IN_QUERY, 
         description="Set to 'true' to fetch all profiles of the given type; otherwise, fetch the user's latest profile.",type=openapi.TYPE_BOOLEAN, default=False),],
         responses={200: "Returns a serialized profile or list of profiles.",404: "{'status': False, 'message': 'No profiles found'}",403: "{'status': False, 'message': 'User does not exist'}"})
-																																										  
-																																								 
     async def get(self,request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -370,7 +367,6 @@ class InvestorList(APIView):
         request_body=openapi.Schema(type=openapi.TYPE_OBJECT,properties={'field_to_update': openapi.Schema(type=openapi.TYPE_STRING, description="Field to update"),},),
         responses={200: "{'status': True}",400: "Returns validation errors or {'status': False, 'message': 'Token is not passed'}",
         403: "{'status': False, 'message': 'User does not exist'}",404: "{'status': False, 'message': 'Investor not found'}",})
-
     async def patch(self,request,id):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -423,7 +419,6 @@ class FranchiseList(APIView):
     @swagger_auto_schema(operation_description="Create a new franchise profile. Requires a valid subscription with remaining posts.",
         request_body=SaleProfilesSerial,responses={201: "{'status': True, 'message': 'Franchise created successfully'}",
         403: "{'status': False, 'message': 'No valid subscription or remaining posts'}",400: "Returns validation errors or {'status': False, 'message': 'Token is not passed'}",})
-
     async def post(self,request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -447,7 +442,6 @@ class FranchiseList(APIView):
         request_body=openapi.Schema(type=openapi.TYPE_OBJECT,properties={'field_to_update': openapi.Schema(type=openapi.TYPE_STRING, description="Field to update"),},),
         responses={200: "{'status': True}",400: "Returns validation errors or {'status': False, 'message': 'Token is not passed'}",
         403: "{'status': False, 'message': 'User does not exist'}",404: "{'status': False, 'message': 'Franchise not found'}",})
-
     async def patch(self,request,id):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
