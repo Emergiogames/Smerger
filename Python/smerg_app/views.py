@@ -695,8 +695,11 @@ class RecentActs(APIView):
                 already_exists = await RecentActivity.objects.filter(user=user, product=product).aexists()
                 if already_exists:
                     recent = await RecentActivity.objects.filter(user=user,product=product).adelete()
+                    product.impressions -= 1
                 saved, resp = await create_serial(RecentSerial, data)
                 if saved:
+                    product.impressions += 1
+                    await product.asave()
                     return Response({'status':True}, status=status.HTTP_200_OK)
                 return Response(serializer.errors)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1183,64 +1186,18 @@ class EnquiriesCounts(APIView):
     async def get(self, request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
+            impression = 0
             if exists:
                 if request.GET.get('post_type'):
                     user_posts = await SaleProfiles.objects.filter(user=user, entity_type=request.GET.get('post_type')).aexists()
                     if user_posts:
+                        async for posts in SaleProfiles.objects.filter(user=user, entity_type=request.GET.get('post_type')):
+                            impression += posts.impressions
                         today = timezone.now().date()
                         yesterday = today - timedelta(days=1)
                         counts = Room.objects.filter(Q(first_person=user) | Q(second_person=user)).annotate(has_messages=Exists(ChatMessage.objects.filter(room=OuterRef('pk')))).filter(has_messages=True).aggregate(today_count=Count(Case(When(created_date__date=today, then=1), output_field=IntegerField(),)), yesterday_count=Count(Case(When(created_date__date=yesterday, then=1), output_field=IntegerField(),)), total_count=Count('id'))
-                        return Response({'status': True, 'today_count': counts['today_count'], 'yesterday_count': counts['yesterday_count'], 'total_count': counts['total_count']})
+                        return Response({'status': True, 'impressions':impression, 'today_count': counts['today_count'], 'yesterday_count': counts['yesterday_count'], 'total_count': counts['total_count']})
                     return Response({'status': False, 'message': 'User has not added any posts in the requested type'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
                 return Response({'status': False, 'message': 'Post type param not found'}, status=status.HTTP_404_NOT_FOUND)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
-
-class Impressions(APIView):
-    def get(self, request):
-        if request.headers.get('token'):
-            if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and not UserProfile.objects.get(auth_token=request.headers.get('token')).block:
-                user = UserProfile.objects.get(auth_token=request.headers.get('token'))
-                user_posts = SaleProfiles.objects.filter(user=user)
-                data = []
-                total_impressions = 0
-
-                for post in user_posts:
-                    impression_count = post.impressions.count()
-                    total_impressions += impression_count
-                    data.append({
-                        'post_id': post.id,
-                        'impression_count': impression_count
-                    })
-
-                return Response({
-                    'status': True,
-                    'message': 'Impression data fetched successfully',
-                    'total_impressions': total_impressions,
-                    'posts': data
-                }, status=status.HTTP_200_OK)
-
-            return Response({'status':False,'message': 'User doesnot exist'})
-        return Response({'status':False,'message': 'Token is not passed'})
-
-class LogoutView(APIView):
-    def post(self, request):
-        token = request.headers.get('token')
-        if not token:
-            return Response({'status': False, 'message': 'Token is not passed'}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            user = UserProfile.objects.get(auth_token=token)
-            if user.block:
-                return Response({'status': False, 'message': 'User is blocked'}, status=status.HTTP_403_FORBIDDEN)
-            try:
-                session = UserSession.objects.filter(user=user, logout_time__isnull=True).latest('login_time')
-                session.logout_time = timezone.now()
-                session.session_duration = (session.logout_time - session.login_time).total_seconds()  # Store session duration
-                session.save()
-                return Response({'status': True, 'message': 'Logged out successfully'})
-            except UserSession.DoesNotExist:
-                return Response({'status': False, 'message': 'No active session found'})
-            
-        except UserProfile.DoesNotExist:
-            return Response({'status': False, 'message': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
