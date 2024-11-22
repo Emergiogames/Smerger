@@ -24,52 +24,14 @@ from django.db.models import Sum
 from django.utils.timezone import make_aware
 
 
-
-# Define standard status codes
-SUCCESS = 200
-BAD_REQUEST = 400
-UNAUTHORIZED = 401
-FORBIDDEN = 403
-NOT_FOUND = 404
-INTERNAL_SERVER_ERROR = 500
-
 ################################# A D M I N  S I D E #################################
 
 # Login
 class LoginView(APIView):
-    @swagger_auto_schema(
-        operation_description="Login authentication using username and password, and return token",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            required=['username', 'password'],
-            properties={
-                'username': openapi.Schema(type=openapi.TYPE_STRING, description='Username for authentication'),
-                'password': openapi.Schema(type=openapi.TYPE_STRING, description='Password for authentication'),
-            },
-        ),
-        responses={
-            SUCCESS: openapi.Response(
-                description="Login successful",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'token': openapi.Schema(type=openapi.TYPE_STRING, description='Authentication token')
-                    }
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Invalid credentials",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Login authentication using username and password, and return token",
+    request_body=openapi.Schema(type=openapi.TYPE_OBJECT,required=['username', 'password'],
+    properties={'username': openapi.Schema(type=openapi.TYPE_STRING, description='Username for authentication'),'password': openapi.Schema(type=openapi.TYPE_STRING, description='Password for authentication'),},),
+    responses={200: '{"status": true,"token": "d08dcdfssd38ffaaa0d974fb7379e05ec1cd5b95"}',400:'{"status": false,"message": "Invalid credentials"}'})
     def post(self, request):
         if UserProfile.objects.filter(username=request.data.get('username')).exists():
             user = UserProfile.objects.get(username=request.data.get('username'))
@@ -83,32 +45,8 @@ class LoginView(APIView):
 
 # User details
 class UserView(APIView):
-    @swagger_auto_schema(
-        operation_description="Fetch all users",
-        responses={
-            SUCCESS: openapi.Response(
-                description="All users details fetched successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_ARRAY,
-                    items=openapi.Items(type=openapi.TYPE_OBJECT, properties={
-                        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='User ID'),
-                        'username': openapi.Schema(type=openapi.TYPE_STRING, description='Username'),
-                        # Add other relevant user fields here
-                    })
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="All users fetching",
+    responses={200: "All users Details fetched succesfully",400:"Passes an error message"})
     def get(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -119,32 +57,8 @@ class UserView(APIView):
 
 # Business
 class BusinessView(APIView):
-    @swagger_auto_schema(
-        operation_description="Fetch Buisness details",
-        responses={
-            SUCCESS: openapi.Response(
-                description="Buisness details fetched successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_ARRAY,
-                    items=openapi.Items(type=openapi.TYPE_OBJECT, properties={
-                        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Buisness ID'),
-                        'name': openapi.Schema(type=openapi.TYPE_STRING, description='Buisness Name'),
-                        'entity_type': openapi.Schema(type=openapi.TYPE_STRING, description='Type of entity'),
-                    })
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Business fetching",
+    responses={200: "Business Details fetched succesfully",400:"Passes an error message"})
     def get(self, request, *args, **kwargs):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -153,32 +67,10 @@ class BusinessView(APIView):
             return Response({'status': False, 'message': 'User does not exist'})
         return Response({'status': False, 'message': 'Token is not passed'})
 
-    @swagger_auto_schema(
-        operation_description="Update business details",
-        request_body=SaleProfilesSerial,
-        responses={
-            SUCCESS: openapi.Response(
-                description="Business updated successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message')
-                    }
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Update business details for a given business ID.",responses={
+        200: openapi.Response(description="Business details updated successfully."),
+        400: openapi.Response(description="Invalid request, error in updating business."),
+        403: openapi.Response(description="User does not have permission to update the business.")})
     def patch(self, request, id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -193,31 +85,9 @@ class BusinessView(APIView):
             return Response({'status': False, 'message': 'User does not exist'})
         return Response({'status': False, 'message': 'Token is not passed'})
 
-    @swagger_auto_schema(
-        operation_description="Delete business",
-        responses={
-            SUCCESS: openapi.Response(
-                description="Business deleted successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message')
-                    }
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Delete a business or all businesses for a given user.",
+    responses={200: openapi.Response(description="Business deleted successfully"),
+        400: openapi.Response(description="Invalid request, error in deleting business."),403: openapi.Response(description="User does not have permission to delete the business.")})
     def delete(self, request, id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -231,39 +101,8 @@ class BusinessView(APIView):
             return Response({'status': False, 'message': 'User does not exist'})
         return Response({'status': False, 'message': 'Token is not passed'})
 
-    @swagger_auto_schema(
-        operation_description="Block/Unblock business",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            required=['id', 'block'],
-            properties={
-                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Business ID'),
-                'block': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='True to block, False to unblock'),
-            },
-        ),
-        responses={
-            SUCCESS: openapi.Response(
-                description="Business block/unblock successful",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message')
-                    }
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Block or unblock a business.",
+    responses={200: "Business blocked or unblocked successfully",400: "Invalid request, error in blocking/unblocking business."})
     def post(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -277,32 +116,8 @@ class BusinessView(APIView):
 
 # Advisor
 class AdvisorView(APIView):
-    @swagger_auto_schema(
-        operation_description="Fetch advisor details",
-        responses={
-            SUCCESS: openapi.Response(
-                description="Advisor details fetched successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_ARRAY,
-                    items=openapi.Items(type=openapi.TYPE_OBJECT, properties={
-                        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the advisor'),
-                        'name': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the advisor'),
-                        'entity_type': openapi.Schema(type=openapi.TYPE_STRING, description='Type of entity'),
-                    })
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Advisor fetching",
+    responses={200: "Advisor Details fetched succesfully",400:"Passes an error message"})
     def get(self, request,*args,**kw):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -311,32 +126,11 @@ class AdvisorView(APIView):
             return Response({'status': False, 'message': 'User does not exist'})
         return Response({'status': False, 'message': 'Token is not passed'})
 
-    @swagger_auto_schema(
-        operation_description="Update advisor details",
-        request_body=SaleProfilesSerial,
-        responses={
-            SUCCESS: openapi.Response(
-                description="Advisor updated successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message')
-                    }
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Update advisor details for a given advisor ID.",responses={
+        200: openapi.Response(description="advisor details updated successfully."),
+        400: openapi.Response(description="Invalid request, error in updating advisor."),
+        403: openapi.Response(description="User does not have permission to update the advisor.")})
+    
     def patch(self, request, id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -350,31 +144,9 @@ class AdvisorView(APIView):
             return Response({'status': False, 'message': 'User does not exist'})
         return Response({'status': False, 'message': 'Token is not passed'})
 
-    @swagger_auto_schema(
-        operation_description="Delete advisor",
-        responses={
-            SUCCESS: openapi.Response(
-                description="Advisor deleted successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message')
-                    }
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Delete a advisor or all advisors for a given user.",
+    responses={200: openapi.Response(description="advisor deleted successfully"),
+        400: openapi.Response(description="Invalid request, error in deleting advisor."),403: openapi.Response(description="User does not have permission to delete the advisor.")})
     def delete(self, request, id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -384,39 +156,8 @@ class AdvisorView(APIView):
             return Response({'status': False, 'message': 'User does not exist'})
         return Response({'status': False, 'message': 'Token is not passed'})
 
-    @swagger_auto_schema(
-        operation_description="Block/Unblock advisor",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            required=['id', 'block'],
-            properties={
-                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Advisor ID'),
-                'block': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='True to block, False to unblock'),
-            },
-        ),
-        responses={
-            SUCCESS: openapi.Response(
-                description="Advisor block/unblock successful",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message')
-                    }
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Block or unblock a advisor.",
+    responses={200: "advisor blocked or unblocked successfully",400: "Invalid request, error in blocking/unblocking advisor  ."})
     def post(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -430,32 +171,8 @@ class AdvisorView(APIView):
 
 # Investor
 class InvestorView(APIView):
-    @swagger_auto_schema(
-        operation_description="Fetch investor details",
-        responses={
-            SUCCESS: openapi.Response(
-                description="Investor details fetched successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_ARRAY,
-                    items=openapi.Items(type=openapi.TYPE_OBJECT, properties={
-                        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Investor ID'),
-                        'name': openapi.Schema(type=openapi.TYPE_STRING, description='Investor Name'),
-                        'entity_type': openapi.Schema(type=openapi.TYPE_STRING, description='Type of entity'),
-                    })
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Investor fetching",
+    responses={200: "Investor Details fetched succesfully",400:"Passes an error message"})
     def get(self, request,*args,**kw):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -464,32 +181,10 @@ class InvestorView(APIView):
             return Response({'status': False, 'message': 'User does not exist'})
         return Response({'status': False, 'message': 'Token is not passed'})
 
-    @swagger_auto_schema(
-        operation_description="Update investor details",
-        request_body=SaleProfilesSerial,
-        responses={
-            SUCCESS: openapi.Response(
-                description="Investor updated successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message')
-                    }
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Update investor details for a given investor ID.",
+    responses={200: openapi.Response(description="Investor details updated successfully."),
+        400: openapi.Response(description="Invalid request, error in updating investor."),
+        403: openapi.Response(description="User does not have permission to update the investor.")})
     def patch(self, request, id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -502,32 +197,9 @@ class InvestorView(APIView):
                 return Response(serializer.errors)
             return Response({'status': False, 'message': 'User does not exist'})
         return Response({'status': False, 'message': 'Token is not passed'})
-
-    @swagger_auto_schema(
-        operation_description="Delete investor",
-        responses={
-            SUCCESS: openapi.Response(
-                description="Investor deleted successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message')
-                    }
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Delete a specific investor by ID.",
+    responses={200: openapi.Response(description="Investor deleted successfully"),400: openapi.Response(description="Invalid request, error in deleting investor."),
+        403: openapi.Response(description="User does not have permission to delete the investor.")})
     def delete(self, request, id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -537,39 +209,10 @@ class InvestorView(APIView):
             return Response({'status': False, 'message': 'User does not exist'})
         return Response({'status': False, 'message': 'Token is not passed'})
 
-    @swagger_auto_schema(
-        operation_description="Block/Unblock investor",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            required=['id', 'block'],
-            properties={
-                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Investor ID'),
-                'block': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='True to block, False to unblock'),
-            },
-        ),
-        responses={
-            SUCCESS: openapi.Response(
-                description="Investor block/unblock successful",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message')
-                    }
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Block or unblock an investor.",
+    responses={200: openapi.Response(description="Investor blocked or unblocked successfully"),
+        400: openapi.Response(description="Invalid request, error in blocking/unblocking investor."),
+        403: openapi.Response(description="User does not have permission to block/unblock the investor.")})
     def post(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -583,32 +226,8 @@ class InvestorView(APIView):
 
 # Franchise
 class FranchiseView(APIView):
-    @swagger_auto_schema(
-        operation_description="Fetch franchise details",
-        responses={
-            SUCCESS: openapi.Response(
-                description="Franchise details fetched successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_ARRAY,
-                    items=openapi.Items(type=openapi.TYPE_OBJECT, properties={
-                        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Franchise ID'),
-                        'name': openapi.Schema(type=openapi.TYPE_STRING, description='Franchise Name'),
-                        'entity_type': openapi.Schema(type=openapi.TYPE_STRING, description='Type of entity'),
-                    })
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Franchise fetching",
+    responses={200: "Franchise Details fetched succesfully",400:"Passes an error message"})
     def get(self, request,*args,**kw):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -617,32 +236,10 @@ class FranchiseView(APIView):
             return Response({'status': False, 'message': 'User does not exist'})
         return Response({'status': False, 'message': 'Token is not passed'})
 
-    @swagger_auto_schema(
-        operation_description="Update franchise details",
-        request_body=SaleProfilesSerial,
-        responses={
-            SUCCESS: openapi.Response(
-                description="Franchise updated successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message')
-                    }
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Update franchise details for a given franchise ID.",
+    responses={200: openapi.Response(description="Franchise details updated successfully."),
+    400: openapi.Response(description="Invalid request, error in updating franchise."),
+    403: openapi.Response(description="User does not have permission to update the franchise.")})
     def patch(self, request, id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -656,31 +253,10 @@ class FranchiseView(APIView):
             return Response({'status': False, 'message': 'User does not exist'})
         return Response({'status': False, 'message': 'Token is not passed'})
 
-    @swagger_auto_schema(
-        operation_description="Delete franchise",
-        responses={
-            SUCCESS: openapi.Response(
-                description="Franchise deleted successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message')
-                    }
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Delete a specific franchise by ID.",
+    responses={200: openapi.Response(description="Franchise deleted successfully"),
+        400: openapi.Response(description="Invalid request, error in deleting franchise."),
+        403: openapi.Response(description="User does not have permission to delete the franchise.")})
     def delete(self, request, id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -690,39 +266,10 @@ class FranchiseView(APIView):
             return Response({'status': False, 'message': 'User does not exist'})
         return Response({'status': False, 'message': 'Token is not passed'})
 
-    @swagger_auto_schema(
-        operation_description="Block/Unblock franchise",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            required=['id', 'block'],
-            properties={
-                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Franchise ID'),
-                'block': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='True to block, False to unblock'),
-            },
-        ),
-        responses={
-            SUCCESS: openapi.Response(
-                description="Franchise block/unblock successful",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message')
-                    }
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Block or unblock a franchise.",
+    responses={200: openapi.Response(description="Franchise blocked or unblocked successfully"),
+    400: openapi.Response(description="Invalid request, error in blocking/unblocking franchise."),
+    403: openapi.Response(description="User does not have permission to block/unblock the franchise.")})
     def post(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -737,7 +284,8 @@ class FranchiseView(APIView):
 # Blocking a user
 class Blocked(APIView):
     @swagger_auto_schema(operation_description="Blocking/ Unblocking a user",request_body=ProfileSerial,
-    responses={SUCCESS: "{'status':True,'message': 'Blocked/ Unblocked a user successfully'}", BAD_REQUEST:"Passes an error message"})
+    responses={200: "{'status':True,'message': 'Blocked/ Unblocked a user successfully'}",400:"Passes an error message"})
+    
     def post(self,request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -756,7 +304,7 @@ class Blocked(APIView):
 # Plans
 class Plans(APIView):
     @swagger_auto_schema(operation_description="Plans fetching",
-    responses={SUCCESS: "Plans Details fetched successfully", BAD_REQUEST:"Passes an error message"})
+    responses={200: "Plans Details fetched succesfully",400:"Passes an error message"})
     def get(self,request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -766,7 +314,7 @@ class Plans(APIView):
         return Response({'status':False,'message': 'Token is not passed'})
 
     @swagger_auto_schema(operation_description="Plans creation",request_body=PlanSerial,
-    responses={SUCCESS: "{'status':True,'message': 'Plans created successfully'}", BAD_REQUEST:"Passes an error message"})
+    responses={200: "{'status':True,'message': 'Plans created successfully'}",400:"Passes an error message"})
     def post(self,request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -779,7 +327,7 @@ class Plans(APIView):
         return Response({'status':False,'message': 'Token is not passed'})
 
     @swagger_auto_schema(operation_description="Plan details updation",request_body=SaleProfilesSerial,
-    responses={SUCCESS: "{'status':True,'message': 'Plan details updated successfully'}", BAD_REQUEST:"Passes an error message"})
+    responses={200: "{'status':True,'message': 'Plan details updated successfully'}",400:"Passes an error message"})
     def put(self,request,id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -792,7 +340,7 @@ class Plans(APIView):
         return Response({'status':False,'message': 'Token is not passed'})
 
     @swagger_auto_schema(operation_description="Plan detail deletion",request_body=SaleProfilesSerial,
-    responses={SUCCESS: "{'status':True,'message': 'Plan detail deleted successfully'}", BAD_REQUEST:"Passes an error message"})
+    responses={200: "{'status':True,'message': 'Plan detail deleted successfully'}",400:"Passes an error message"})
     def delete(self,request,id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -805,33 +353,8 @@ class Plans(APIView):
 
 # Event banner
 class Banners(APIView):
-    @swagger_auto_schema(
-        operation_description="Banner fetching",
-        responses={
-            SUCCESS: openapi.Response(
-                description="Banner Details fetched successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_ARRAY,
-                    items=openapi.Items(type=openapi.TYPE_OBJECT, properties={
-                        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the banner'),
-                        'type': openapi.Schema(type=openapi.TYPE_STRING, description='Type of the banner'),
-                        'valid_date': openapi.Schema(type=openapi.TYPE_STRING, description='Validity date of the banner'),
-                        'expire': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Banner validity status')
-                    })
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Passes an error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Banner fetching",
+    responses={200: "Banner Details fetched succesfully",400:"Passes an error message"})
     def get(self,request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -849,31 +372,8 @@ class Banners(APIView):
                 return Response(serializer.data)
             return Response({'status':False,'message': 'User doesnot exist'})
         return Response({'status':False,'message': 'Token is not passed'})
-    @swagger_auto_schema(
-        operation_description="Banners creation",
-        request_body=BannerSerial,
-        responses={
-            SUCCESS: openapi.Response(
-                description="Banners created successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request')
-                    }
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Passes an error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Banners creation",request_body=BannerSerial,
+    responses={200: "{'status':True,'message': 'Banners created successfully'}",400:"Passes an error message"})
     def post(self,request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -887,31 +387,8 @@ class Banners(APIView):
             return Response({'status':False,'message': 'User does not exist'})
         return Response({'status':False,'message': 'Token is not passed'})
 
-    @swagger_auto_schema(
-        operation_description="Banners updation",
-        request_body=BannerSerial,
-        responses={
-            SUCCESS: openapi.Response(
-                description="Banners updated successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request')
-                    }
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Passes an error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Banners updation",request_body=BannerSerial,
+    responses={200: "{'status':True,'message': 'Banners updated successfully'}",400:"Passes an error message"})    
     def put(self,request,id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -923,31 +400,8 @@ class Banners(APIView):
             return Response({'status':False,'message': 'User does not exist'})
         return Response({'status':False,'message': 'Token is not passed'})
 
-    @swagger_auto_schema(
-        operation_description="Banner deletion",
-        request_body=BannerSerial,
-        responses={
-            SUCCESS: openapi.Response(
-                description="Banner deleted successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request')
-                    }
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Passes an error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Banner deletion",request_body=BannerSerial,
+    responses={200: "{'status':True,'message': 'Banner deleted successfully'}",400:"Passes an error message"})
     def delete(self,request,id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -1004,8 +458,9 @@ class Notifications(APIView):
 
 # Admin Report Management
 class AdminReportView(APIView):
-    @swagger_auto_schema(operation_description="Fetch all reports",
-    responses={200: "Reports fetched successfully", 404: "No reports found"})
+    @swagger_auto_schema(operation_description="Fetch all reports for admin users.",
+    responses={200: openapi.Response(description="Reports fetched successfully"),400: openapi.Response(description="Error response when token is not provided or invalid."),
+        403: openapi.Response(description="Unauthorized access for non-superuser users."),404: openapi.Response(description="No reports found"),})
     def get(self, request):
         token = request.headers.get('token')
         if token:
@@ -1025,12 +480,9 @@ class AdminReportView(APIView):
         serializer = ReportSerial(reports, many=True)
         return Response({'status': True, 'data': serializer.data}, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(operation_description="Update report status and type",
-    request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['report_id', 'report_type', 'status'],
-    properties={'report_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the report'),
-                'report_type': openapi.Schema(type=openapi.TYPE_STRING, description='Type of report'),
-                'status': openapi.Schema(type=openapi.TYPE_STRING, description='Status of the report (e.g., resolved, pending)')}), 
-    responses={200: "{'status':True,'message': 'Report updated successfully'}", 400: "{'status':False,'message': 'Invalid report ID or data'}"})
+    @swagger_auto_schema(operation_description="Update report details (report type and status).",
+    responses={200: openapi.Response(description="Report updated successfully"),400: openapi.Response(description="Invalid request, error in updating report."),
+    403: openapi.Response(description="Unauthorized access for non-superuser users."),404: openapi.Response(description="Report not found."),})
     def patch(self, request):
         token = request.headers.get('token')
         if token:
@@ -1061,12 +513,9 @@ class AdminReportView(APIView):
 
         return Response({'status': True, 'message': 'Report updated successfully'}, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(operation_description="Block post or user based on report",
-    request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['post_id', 'user_id', 'block'],
-    properties={'post_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the post to block/unblock'),
-                'user_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the user to block/unblock'),
-                'block': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='True to block, False to unblock')}), 
-    responses={200: "{'status':True,'message': 'Post/User block/unblock successful'}", 400: "{'status':False,'message': 'Invalid post/user ID or block status'}"})
+    @swagger_auto_schema(operation_description="Block or unblock a report (based on post or user type).",
+    responses={200: openapi.Response(description="Post or user blocked/unblocked successfully"),400: openapi.Response(description="Invalid request, error in blocking/unblocking."),
+    403: openapi.Response(description="Unauthorized access for non-superuser users."),404: openapi.Response(description="Post or user not found."),})
     def post(self, request):
         token = request.headers.get('token')
         if token:
@@ -1111,41 +560,10 @@ class AdminReportView(APIView):
         return Response({'status': True, 'message': message}, status=status.HTTP_200_OK)
 
 class DashboardView(APIView):
-    @swagger_auto_schema(
-        operation_description="Fetch number of posts, users, and reports within a date range or show full numbers if dates are not provided",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            required=[],
-            properties={
-                'start_date': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATE, description='Start date in YYYY-MM-DD format'),
-                'end_date': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATE, description='End date in YYYY-MM-DD format'),
-            }
-        ),
-        responses={
-            SUCCESS: openapi.Response(
-                description="Dashboard statistics fetched successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'posts_count': openapi.Schema(type=openapi.TYPE_INTEGER, description='Number of posts'),
-                        'users_count': openapi.Schema(type=openapi.TYPE_INTEGER, description='Number of users'),
-                        'reports_count': openapi.Schema(type=openapi.TYPE_INTEGER, description='Number of reports'),
-                        'subscribe_count': openapi.Schema(type=openapi.TYPE_INTEGER, description='Number of subscrptions'),
-                    }
-                )
-            ),
-            BAD_REQUEST: openapi.Response(
-                description="Error message",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'status': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Status of the request'),
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
-                    }
-                )
-            )
-        }
-    )
+    @swagger_auto_schema(operation_description="Fetch dashboard data (e.g. post count, user count, report count, subscription count) based on date range.",
+    responses={200: openapi.Response(description="Dashboard data fetched successfully"),400: openapi.Response(description="Error response when date format is incorrect or invalid"),
+        403: openapi.Response(description="Unauthorized access for non-superuser users"),404: openapi.Response(description="No records found"),})
+    
     def get(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists():
@@ -1185,8 +603,9 @@ class DashboardView(APIView):
         }, status=status.HTTP_200_OK)
 
 class Userconnections(APIView):
-    @swagger_auto_schema(operation_description="Fetch recent enquiries",
-    responses={200: "{'status':True,'message': 'Fetched successfully'}"})
+    @swagger_auto_schema(operation_description="Fetch recent user connections based on user ID. If no user ID is provided, fetch all user connections.",
+    responses={200: openapi.Response(description="Recent user connections fetched successfully"),400: openapi.Response(description="Error response when token is not provided or invalid"),
+        403: openapi.Response(description="Unauthorized access if the user is blocked"),404: openapi.Response(description="User or specified user not found"),})
     def get(self, request):
         token = request.headers.get('token')
         if not token:
@@ -1232,9 +651,10 @@ class Userconnections(APIView):
             return Response({'status': False, 'message': 'User does not exist'})
 
 class UserConnectionCount(APIView):
-    @swagger_auto_schema(operation_description="Get the total number of connections for a user",
-                         responses={200: "{'status': True, 'message': 'Fetched successfully', 'connections_count': <count>}"},
-                         manual_parameters=[{'name': 'user_id', 'in': 'query', 'description': 'ID of the user to fetch connections for', 'required': False, 'type': 'integer'}])
+    @swagger_auto_schema(operation_description="Get the number of connections for a specific user or the requesting user.",
+    responses={200: openapi.Response(description="User connection count fetched successfully"),
+    400: openapi.Response(description="Error response when token is not provided or invalid"),
+    403: openapi.Response(description="Unauthorized access if the user is blocked"),404: openapi.Response(description="Specified user not found"),})
     def get(self, request):
         token = request.headers.get('token')
         if not token:
@@ -1263,9 +683,10 @@ class UserConnectionCount(APIView):
 
         
 class ChangePwd(APIView):
-    @swagger_auto_schema(operation_description="Forgot password api, where an otp is sended to user's whatsapp",request_body=openapi.Schema(type=openapi.TYPE_OBJECT,required=['username'],
-    properties={'username': openapi.Schema(type=openapi.TYPE_STRING, description='Username for authentication'),'password': openapi.Schema(type=openapi.TYPE_STRING, description='Password for authentication'),},),
-    responses={200: "{'status':True,'message': 'User password changed successfully'}",400:"Passes an error message"})
+    @swagger_auto_schema(operation_description="Change the password of a user if the current password matches.",
+    responses={200: openapi.Response(description="Password changed successfully"),
+        400: openapi.Response(description="Error response when current password does not match"),
+        403: openapi.Response(description="Unauthorized access if user is not an admin or token is invalid"),404: openapi.Response(description="User not found"),})
     def post(self,request):
         password = request.data.get('password')
         if request.headers.get('token'):
@@ -1287,10 +708,9 @@ class ChangePwd(APIView):
 
 class AdminPostVerification(APIView):
 
-    @swagger_auto_schema(
-        operation_description="Fetch all posts pending verification",
-        responses={200: "Pending posts fetched successfully"}
-    )
+    @swagger_auto_schema(operation_description="Fetch pending posts that are unverified and not blocked.",
+    responses={200: openapi.Response(description="Pending posts fetched successfully"),
+        403: openapi.Response(description="Unauthorized access if user is not an admin"),404: openapi.Response(description="No pending posts found"),})
     def get(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
@@ -1298,11 +718,9 @@ class AdminPostVerification(APIView):
         serializer = SaleProfilesSerial(pending_posts, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(
-        operation_description="Approve or block a post",
-        request_body=None,
-        responses={200: "{'status': True, 'message': 'Post status updated successfully'}"}
-    )
+    @swagger_auto_schema(operation_description="Approve or block a post based on the action parameter.",responses={200: openapi.Response(description="Post verified or blocked successfully"),
+        400: openapi.Response(description="Error response when invalid action is provided"),404: openapi.Response(description="Post not found"),
+        403: openapi.Response(description="Unauthorized access if user is not an admin"),})
     def patch(self, request, id):
         action = request.data.get('action')
 
@@ -1333,10 +751,9 @@ class AdminPostVerification(APIView):
 
 
 class Adminview(APIView):
-     @swagger_auto_schema(
-        operation_description="Fetch all admins",
-        responses={200: "All Admin fetched successfully"}
-    )
+     @swagger_auto_schema(operation_description="Fetch all admin users (excluding staff users).",
+    responses={200: openapi.Response(description="All admins fetched successfully"),
+    403: openapi.Response(description="Unauthorized access if user is not a superuser or not a staff"),404: openapi.Response(description="No admins found"),})
      def get(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser and UserProfile.objects.get(auth_token=request.headers.get('token')).is_staff:
@@ -1346,11 +763,9 @@ class Adminview(APIView):
         return Response({'status':False,'message': 'Token doesnot exist'})
      
 
-     @swagger_auto_schema(operation_description="creation of new admins",
-    request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['email','password'],
-    properties={'email': openapi.Schema(type=openapi.TYPE_STRING, description='Email of the new admin'),
-                'password': openapi.Schema(type=openapi.TYPE_STRING, description='Password of the new admin')}), 
-    responses={200: "{'status':True,'message': 'Admins are'}", 400: "{'status':False,'message': 'Invalid post/user ID or block status'}"})
+     @swagger_auto_schema(operation_description="Create a new admin user.",
+    responses={200: openapi.Response(description="Admin user created successfully"),400: openapi.Response(description="Bad request when validation fails or email already exists"),
+    403: openapi.Response(description="Unauthorized access if user is not a superuser or not a staff"),404: openapi.Response(description="User does not exist"),})
      def post(self, request):
          if request.headers.get('token'):
              if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser and UserProfile.objects.get(auth_token=request.headers.get('token')).is_staff:
@@ -1368,12 +783,10 @@ class Adminview(APIView):
                      return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
              return Response({'status': False, 'message': 'User does not exist'})
          return Response({'status': False, 'message': 'Token does not exist'})
-# ... existing code ...
-     @swagger_auto_schema(operation_description="Update existing admin",
-    request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['email','password'],
-    properties={'email': openapi.Schema(type=openapi.TYPE_STRING, description='Email of the admin to update'),
-                'password': openapi.Schema(type=openapi.TYPE_STRING, description='New password of the admin')}), 
-    responses={200: "{'status':True,'message': 'Admin updated successfully'}", 400: "{'status':False,'message': 'Invalid post/user ID or block status'}"})
+
+     @swagger_auto_schema(operation_description="Update an existing admin's details, including password.",
+    responses={200: openapi.Response(description="Admin updated successfully"),400: openapi.Response(description="Invalid request if validation fails"),
+    403: openapi.Response(description="Unauthorized access if user is not a superuser or not a staff"),404: openapi.Response(description="Admin user not found"),})
      def patch(self, request, id):
          if request.headers.get('token'):
              if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser and UserProfile.objects.get(auth_token=request.headers.get('token')).is_staff:
@@ -1389,12 +802,12 @@ class Adminview(APIView):
                  return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
              return Response({'status': False, 'message': 'User does not exist'})
          return Response({'status': False, 'message': 'Token does not exist'})
-# ... existing code ...
 
-     @swagger_auto_schema(operation_description="Delete existing admin",
-    request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['id'],
-    properties={'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the admin to delete')}), 
-    responses={200: "{'status':True,'message': 'Admin deleted successfully'}", 400: "{'status':False,'message': 'Invalid admin ID'}"})
+     @swagger_auto_schema(
+    operation_description="Delete an existing admin user.",
+    responses={200: openapi.Response(description="Admin deleted successfully"),
+    403: openapi.Response(description="Unauthorized access if user is not a superuser or not a staff"),404: openapi.Response(description="Admin not found"),})
+
      def delete(self, request, id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser and UserProfile.objects.get(auth_token=request.headers.get('token')).is_staff:         
@@ -1410,6 +823,10 @@ class Adminview(APIView):
 
 
 class TotalTimeSpentView(APIView):
+    @swagger_auto_schema(operation_description="Fetch the total time a user has spent based on their sessions within a date range.",
+    responses={200: openapi.Response(description="Total time spent by the user in the provided date range"),400: openapi.Response(description="Bad request when required parameters are missing or invalid date format"),
+    403: openapi.Response(description="Unauthorized access if user is not a superuser or staff"),404: openapi.Response(description="User does not exist"),})
+    
     def get(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser and UserProfile.objects.get(auth_token=request.headers.get('token')).is_staff:         
