@@ -244,7 +244,7 @@ class Profiles(APIView):
             if exists:
                 profiles = await Profile.objects.aget(id=id)
                 await SaleProfiles.objects.filter(user = user, entity_type=profile.type).adelete()
-				await profiles.adelete()
+                await profiles.adelete()
                 return Response({'status':True}, status=status.HTTP_200_OK)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -553,14 +553,12 @@ class Search(APIView):
                         query &= Q(range_starting__gte=float(request.GET.get('range_starting')))
                     if request.GET.get('range_ending'):
                         query &= Q(range_ending__lte=float(request.GET.get('range_ending')))
-					if request.GET.get('ebitda'):
+                    if request.GET.get('ebitda'):
                         query &= Q(ebitda__icontains=request.GET.get('ebitda'))
                     if request.GET.get('preference'):
                         query &= Q(preference__contains=request.GET.get('preference '))
                     if request.GET.get('top_selling'):
                         query &= Q(top_selling__icontains=request.GET.get('top_selling'))
-                    							 
-															 
                     search = [posts async for posts in SaleProfiles.objects.filter(query)]
                 serialized_data = await serialize_data(search, SaleProfilesSerial)
                 return Response({'status':True,'data':serialized_data}, status=status.HTTP_200_OK)
@@ -654,7 +652,7 @@ class RecentActs(APIView):
                 already_exists = await RecentActivity.objects.filter(user=user, product=product).aexists()
                 if already_exists:
                     recent = await RecentActivity.objects.filter(user=user,product=product).adelete()
-					product.impressions -= 1
+                    product.impressions -= 1
                 saved, resp = await create_serial(RecentSerial, data)
                 if saved:
                     product.impressions += 1
@@ -742,8 +740,8 @@ class Transactions(APIView):
 
 # Preferences
 class Prefer(APIView):
-	@swagger_auto_schema(operation_description="Get preference details for the user", 
-                          responses={200: "Preference details fetched successfully", 400: "Error message"})
+    @swagger_auto_schema(operation_description="Get preference details for the user", 
+    responses={200: "Preference details fetched successfully", 400: "Error message"})
     async def get(self, request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -757,7 +755,7 @@ class Prefer(APIView):
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
- @swagger_auto_schema(operation_description="Preference details creation",request_body=PrefSerial,
+    @swagger_auto_schema(operation_description="Preference details creation",request_body=PrefSerial,
     responses={200: "{'status':True,'message': 'Preference details created successfully'}",400:"Passes an error message"})
     async def post(self,request):
         if request.headers.get('token'):
@@ -776,8 +774,8 @@ class Prefer(APIView):
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
-	@swagger_auto_schema(operation_description="Partially update preference details",
-        request_body=PrefSerial,responses={200: "Preference details updated successfully",400: "Error message"})
+    @swagger_auto_schema(operation_description="Partially update preference details",
+    request_body=PrefSerial,responses={200: "Preference details updated successfully",400: "Error message"})
     async def patch(self, request, id):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))

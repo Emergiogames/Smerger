@@ -787,8 +787,8 @@ class Adminview(APIView):
     responses={200: openapi.Response(description="Admin updated successfully"),400: openapi.Response(description="Invalid request if validation fails"),
     403: openapi.Response(description="Unauthorized access if user is not a superuser or not a staff"),404: openapi.Response(description="Admin user not found"),})
      def patch(self, request, id):
-         if request.headers.get('token'):
-             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser and UserProfile.objects.get(auth_token=request.headers.get('token')).is_staff:
+        if request.headers.get('token'):
+            if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser and UserProfile.objects.get(auth_token=request.headers.get('token')).is_staff:
                 admin = UserProfile.objects.get(id=id)
                 serializer = UserSerial(admin, data=request.data, partial=True)
                 if serializer.is_valid():
@@ -798,16 +798,15 @@ class Adminview(APIView):
                         admin.set_password(password)
                         admin.save()
                     return Response({'status': True, 'message': 'Admin updated successfully'})
-                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-             return Response({'status': False, 'message': 'User does not exist'})
-         return Response({'status': False, 'message': 'Token does not exist'})
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status': False, 'message': 'User does not exist'})
+        return Response({'status': False, 'message': 'Token does not exist'})
 
-     @swagger_auto_schema(
+    @swagger_auto_schema(
     operation_description="Delete an existing admin user.",
     responses={200: openapi.Response(description="Admin deleted successfully"),
     403: openapi.Response(description="Unauthorized access if user is not a superuser or not a staff"),404: openapi.Response(description="Admin not found"),})
-
-     def delete(self, request, id):
+    def delete(self, request, id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser and UserProfile.objects.get(auth_token=request.headers.get('token')).is_staff:         
                 try:
