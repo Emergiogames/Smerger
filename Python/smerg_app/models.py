@@ -64,7 +64,6 @@ class SaleProfiles(models.Model):
     entity_type = models.CharField(max_length=50, choices=ENTITY_TYPE_CHOICES)
     name = models.CharField(max_length=100)
     description = models.TextField()
-    impressions = models.IntegerField(default=0)
     created_at = models.DateField(auto_now_add=True,null=True)
 
     # Common fields
