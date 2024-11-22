@@ -50,6 +50,4 @@ urlpatterns = [
     path('report',ReportPost.as_view()), # Report the post
     path('recent_enquiries',RecentEnquiries.as_view()), # recent enquiries
     path('count_enquiries',EnquiriesCounts.as_view()), # count of recent enquires
-    path('impressions', Impressions.as_view()),
-    path('logout', LogoutView.as_view()),
 ]
