@@ -7,9 +7,13 @@ from django.db.models import Q
 from .utils.enc_utils import *
 from smerg_app.utils.async_serial_utils import *
 from smerg_app.utils.check_utils import *
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 # Rooms
 class Rooms(APIView):
+    @swagger_auto_schema(operation_description="Get a list of all chat rooms for the authenticated user.",
+    responses={200: "List of chat rooms retrieved successfully.",404: "User does not exist.",400: "Token is not passed."})
     async def get(self, request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -20,6 +24,9 @@ class Rooms(APIView):
             return Response({'status':False,'message': 'User doesnot exist'})
         return Response({'status':False,'message': 'Token is not passed'})
 
+    @swagger_auto_schema(operation_description="Create a new chat room or retrieve an existing one between two users.",request_body=openapi.Schema(type=openapi.TYPE_OBJECT,
+    properties={'receiverId': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the receiver's SaleProfile."),},required=['receiverId'],),
+    responses={200: "Chat room created or retrieved successfully.",404: "User does not exist.",400: "Token is not passed."})
     async def post(self, request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -37,6 +44,9 @@ class Rooms(APIView):
 
 # Chat of 2 users
 class Chat(APIView):
+    @swagger_auto_schema(operation_description="Fetch chat messages for a specific room.",
+    manual_parameters=[openapi.Parameter('roomId', openapi.IN_QUERY, type=openapi.TYPE_INTEGER,description="ID of the chat room.")],
+    responses={200: "Chat messages retrieved successfully.",404: "User does not exist.",400: "Token is not passed."})
     async def get(self, request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))

@@ -182,13 +182,13 @@ class ChangePwd(APIView):
         return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
 
 class Profiles(APIView):
-    @swagger_auto_schema(
-    operation_description="Fetch profiles based on the entity type (e.g., business, investor). " 
-                          "You can specify the `show_all` parameter to retrieve all or " "the logged-in user's profiles along with other profiles of a specified type.",
-    manual_parameters=[openapi.Parameter('show_all', openapi.IN_QUERY, description="Set to 'true' to fetch all profiles of a specified type. Set to 'false' to fetch only the logged-in user's profiles and any other specified type.",type=openapi.TYPE_BOOLEAN,required=False,),
-                       openapi.Parameter('type', openapi.IN_QUERY, description="The type of profile to fetch (e.g., 'advisor', 'business', 'investor'). Only relevant if `show_all` is 'false'.",type=openapi.TYPE_STRING,required=False,),
-                       openapi.Parameter('token', openapi.IN_HEADER,description="Authentication token for the logged-in user.",type=openapi.TYPE_STRING,required=True,),],
-    request_body=ProfileSerial, responses={ 200: openapi.Response("Success", ProfileSerial(many=True)), 400: "User blocked/ Not found", 401: "Not autherised", })
+						 
+    @swagger_auto_schema(operation_description="Fetch profiles based on type and user subscription.",
+        manual_parameters=[openapi.Parameter('type', openapi.IN_QUERY,description="Type of the profile to fetch",type=openapi.TYPE_STRING, required=True),openapi.Parameter('show_all', openapi.IN_QUERY, 
+        description="Set to 'true' to fetch all profiles of the given type; otherwise, fetch the user's latest profile.",type=openapi.TYPE_BOOLEAN, default=False),],
+        responses={200: "Returns a serialized profile or list of profiles.",404: "{'status': False, 'message': 'No profiles found'}",403: "{'status': False, 'message': 'User does not exist'}"})
+																																										  
+																																								 
     async def get(self,request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -221,8 +221,9 @@ class Profiles(APIView):
             return Response({'status': False, 'message': 'User already has a profile'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    @swagger_auto_schema(operation_description="update user profiles",request_body=ProfileSerial,
-    responses={200: "{'status':True,'message': 'updated successfully'}",400:"Passes an error message"})
+    @swagger_auto_schema(operation_description="Update an existing profile's details.",
+        request_body=openapi.Schema(type=openapi.TYPE_OBJECT,properties={'field_to_update': openapi.Schema(type=openapi.TYPE_STRING, description="Field to update"),},),
+        responses={200: "{'status': True}",400: "Returns validation errors.",404: "{'status': False, 'message': 'Profile not found'}",403: "{'status': False, 'message': 'User does not exist'}",})
     async def patch(self,request,id):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -235,24 +236,25 @@ class Profiles(APIView):
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    @swagger_auto_schema(operation_description="delete user profiles",request_body=ProfileSerial,
-    responses={200: "{'status':True,'message': 'deleted successfully'}",400:"Passes an error message"})
+    @swagger_auto_schema(operation_description="Delete a profile and related SaleProfiles.",responses={200: "{'status': True, 'message': 'Profile deleted successfully'}",
+            404: "{'status': False, 'message': 'Profile not found'}",403: "{'status': False, 'message': 'User does not exist'}",})
     async def delete(self,request,id):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
                 profiles = await Profile.objects.aget(id=id)
                 await SaleProfiles.objects.filter(user = user, entity_type=profile.type).adelete()
-                await profiles.adelete()
+				await profiles.adelete()
                 return Response({'status':True}, status=status.HTTP_200_OK)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
 # Business
 class BusinessList(APIView):
-    @swagger_auto_schema(operation_description="Business fetching",
-    responses={200: "Business Details fetched succesfully",400:"Passes an error message"})
-    async def get(self, request, id):
+    @swagger_auto_schema(operation_description="Fetch business posts. If `id` is 0, fetch all business posts; otherwise, fetch posts created by the logged-in user.",
+        responses={200: "Returns a serialized list of business posts.",403: "{'status': False, 'message': 'User does not exist'}",400: "{'status': False, 'message': 'Token is not passed'}",},
+        manual_parameters=[openapi.Parameter('id', openapi.IN_PATH,description="0 to fetch all business posts; otherwise, fetch user's business posts.",type=openapi.TYPE_INTEGER, required=True),])
+    async def get(self,request,id):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
@@ -265,8 +267,9 @@ class BusinessList(APIView):
             return Response({'status': False, 'message': 'User does not exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status': False, 'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    @swagger_auto_schema(operation_description="Business creation",request_body=SaleProfilesSerial,
-    responses={200: "{'status':True,'message': 'Business created successfully'}",400:"Passes an error message"})
+    @swagger_auto_schema(operation_description="Create a new business post. Requires a valid subscription with remaining posts.",
+        request_body=SaleProfilesSerial,responses={201: "{'status': True, 'message': 'Business created successfully'}",
+        403: "{'status': False, 'message': 'No valid subscription or remaining posts'}",400: "Returns validation errors or {'status': False, 'message': 'Token is not passed'}",})
     async def post(self,request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -286,8 +289,10 @@ class BusinessList(APIView):
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    @swagger_auto_schema(operation_description="Business updation",request_body=SaleProfilesSerial,
-    responses={200: "{'status':True,'message': 'Business updated successfully'}",400:"Passes an error message"})
+    @swagger_auto_schema(operation_description="Update an existing business post.",
+        request_body=openapi.Schema(type=openapi.TYPE_OBJECT,properties={'field_to_update': openapi.Schema(type=openapi.TYPE_STRING, description="Field to update"),},),
+        responses={200: "{'status': True}",400: "Returns validation errors or {'status': False, 'message': 'Token is not passed'}",
+        403: "{'status': False, 'message': 'User does not exist'}",404: "{'status': False, 'message': 'Business not found'}",})
     async def patch(self,request,id):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -300,8 +305,10 @@ class BusinessList(APIView):
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    @swagger_auto_schema(operation_description="Business deletion",request_body=SaleProfilesSerial,
-    responses={200: "{'status':True,'message': 'Business deleted successfully'}",400:"Passes an error message"})
+    @swagger_auto_schema(operation_description="Delete a business post by ID. If `id` is 0, delete all business posts of the logged-in user.",
+        responses={200: "{'status': True, 'message': 'Business deleted successfully'}",403: "{'status': False, 'message': 'User does not exist'}",
+        400: "{'status': False, 'message': 'Token is not passed'}",404: "{'status': False, 'message': 'Business not found'}",},
+        manual_parameters=[openapi.Parameter('id', openapi.IN_PATH, description="ID of the business post to delete. Use 0 to delete all posts of the logged-in user.", type=openapi.TYPE_INTEGER, required=True),])
     async def delete(self,request,id):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -317,8 +324,10 @@ class BusinessList(APIView):
 
 # Investor
 class InvestorList(APIView):
-    @swagger_auto_schema(operation_description="Investor fetching",
-    responses={200: "Investor Details fetched succesfully",400:"Passes an error message"})
+    @swagger_auto_schema(operation_description="Fetch investor profiles. If `id` is 0, fetch all verified investor profiles; otherwise, fetch investor profiles created by the logged-in user.",
+        responses={200: "Returns a serialized list of investor profiles.",
+        403: "{'status': False, 'message': 'User does not exist'}",400: "{'status': False, 'message': 'Token is not passed'}",},
+        manual_parameters=[openapi.Parameter('id', openapi.IN_PATH,description="0 to fetch all verified investor profiles; otherwise, fetch user's investor profiles.", type=openapi.TYPE_INTEGER, required=True),])
     async def get(self,request,id):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -335,8 +344,9 @@ class InvestorList(APIView):
             return Response({'status': False, 'message': 'User does not exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status': False, 'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    @swagger_auto_schema(operation_description="Investor creation",request_body=SaleProfilesSerial,
-    responses={200: "{'status':True,'message': 'Investor created successfully'}",400:"Passes an error message"})
+    @swagger_auto_schema(operation_description="Create a new investor profile. Requires a valid subscription with remaining posts.",
+        request_body=SaleProfilesSerial,responses={201: "{'status': True, 'message': 'Investor created successfully'}",
+        403: "{'status': False, 'message': 'No valid subscription or remaining posts'}",400: "Returns validation errors or {'status': False, 'message': 'Token is not passed'}",})
     async def post(self,request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -356,8 +366,11 @@ class InvestorList(APIView):
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    @swagger_auto_schema(operation_description="Investor updation",request_body=SaleProfilesSerial,
-    responses={200: "{'status':True,'message': 'Investor updated successfully'}",400:"Passes an error message"})
+    @swagger_auto_schema(operation_description="Update an existing investor profile by ID.",
+        request_body=openapi.Schema(type=openapi.TYPE_OBJECT,properties={'field_to_update': openapi.Schema(type=openapi.TYPE_STRING, description="Field to update"),},),
+        responses={200: "{'status': True}",400: "Returns validation errors or {'status': False, 'message': 'Token is not passed'}",
+        403: "{'status': False, 'message': 'User does not exist'}",404: "{'status': False, 'message': 'Investor not found'}",})
+
     async def patch(self,request,id):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -370,8 +383,11 @@ class InvestorList(APIView):
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    @swagger_auto_schema(operation_description="Investor deletion",request_body=SaleProfilesSerial,
-    responses={200: "{'status':True,'message': 'Investor deleted successfully'}",400:"Passes an error message"})
+    @swagger_auto_schema(operation_description="Delete an investor profile by ID. If `id` is 0, delete all investor profiles of the logged-in user.",
+        responses={200: "{'status': True, 'message': 'Investor deleted successfully'}",403: "{'status': False, 'message': 'User does not exist'}",
+        400: "{'status': False, 'message': 'Token is not passed'}",404: "{'status': False, 'message': 'Investor not found'}",},
+        manual_parameters=[openapi.Parameter('id', openapi.IN_PATH,description="ID of the investor profile to delete. Use 0 to delete all profiles of the logged-in user.", type=openapi.TYPE_INTEGER, required=True),])
+
     async def delete(self,request,id):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -387,8 +403,10 @@ class InvestorList(APIView):
 
 # Franchise
 class FranchiseList(APIView):
-    @swagger_auto_schema(operation_description="Franchise fetching",
-    responses={200: "Franchise Details fetched succesfully",400:"Passes an error message"})
+    @swagger_auto_schema(operation_description="Fetch franchise profiles. If `id` is 0, fetch all verified franchise profiles; otherwise, fetch franchise profiles created by the logged-in user.",
+        responses={200: "Returns a serialized list of franchise profiles.",
+        403: "{'status': False, 'message': 'User does not exist'}",400: "{'status': False, 'message': 'Token is not passed'}",},
+        manual_parameters=[openapi.Parameter('id', openapi.IN_PATH, description="0 to fetch all verified franchise profiles; otherwise, fetch user's franchise profiles.", type=openapi.TYPE_INTEGER, required=True),])
     async def get(self,request,id):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -402,8 +420,10 @@ class FranchiseList(APIView):
             return Response({'status': False, 'message': 'User does not exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status': False, 'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    @swagger_auto_schema(operation_description="Franchise creation",request_body=SaleProfilesSerial,
-    responses={200: "{'status':True,'message': 'Franchise created successfully'}",400:"Passes an error message"})
+    @swagger_auto_schema(operation_description="Create a new franchise profile. Requires a valid subscription with remaining posts.",
+        request_body=SaleProfilesSerial,responses={201: "{'status': True, 'message': 'Franchise created successfully'}",
+        403: "{'status': False, 'message': 'No valid subscription or remaining posts'}",400: "Returns validation errors or {'status': False, 'message': 'Token is not passed'}",})
+
     async def post(self,request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -423,8 +443,11 @@ class FranchiseList(APIView):
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    @swagger_auto_schema(operation_description="Franchise updation",request_body=SaleProfilesSerial,
-    responses={200: "{'status':True,'message': 'Franchise updated successfully'}",400:"Passes an error message"})
+    @swagger_auto_schema(operation_description="Update an existing franchise profile by ID.",
+        request_body=openapi.Schema(type=openapi.TYPE_OBJECT,properties={'field_to_update': openapi.Schema(type=openapi.TYPE_STRING, description="Field to update"),},),
+        responses={200: "{'status': True}",400: "Returns validation errors or {'status': False, 'message': 'Token is not passed'}",
+        403: "{'status': False, 'message': 'User does not exist'}",404: "{'status': False, 'message': 'Franchise not found'}",})
+
     async def patch(self,request,id):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -437,8 +460,11 @@ class FranchiseList(APIView):
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    @swagger_auto_schema(operation_description="Franchise deletion",request_body=SaleProfilesSerial,
-    responses={200: "{'status':True,'message': 'Franchise deleted successfully'}",400:"Passes an error message"})
+    @swagger_auto_schema(operation_description="Delete a franchise profile by ID. If `id` is 0, delete all franchise profiles of the logged-in user.",
+        responses={200: "{'status': True, 'message': 'Franchise deleted successfully'}",403: "{'status': False, 'message': 'User does not exist'}",
+        400: "{'status': False, 'message': 'Token is not passed'}",404: "{'status': False, 'message': 'Franchise not found'}",},
+        manual_parameters=[openapi.Parameter('id', openapi.IN_PATH,description="ID of the franchise profile to delete. Use 0 to delete all profiles of the logged-in user.", type=openapi.TYPE_INTEGER, required=True),])
+
     async def delete(self,request,id):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -454,8 +480,9 @@ class FranchiseList(APIView):
 
 # User information
 class UserView(APIView):
-    @swagger_auto_schema(operation_description="User fetching",
-    responses={200: "User Details fetched succesfully",400:"Passes an error message"})
+    @swagger_auto_schema(operation_description="Fetch details of the logged-in user based on the provided token.",
+        responses={200: "User details are successfully retrieved.",403: "{'status': False, 'message': 'User does not exist'}",400: "{'status': False, 'message': 'Token is not passed'}",},
+        manual_parameters=[openapi.Parameter('token', openapi.IN_HEADER,description="Authentication token of the logged-in user.",type=openapi.TYPE_STRING, required=True)])
     async def get(self,request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -465,8 +492,10 @@ class UserView(APIView):
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    @swagger_auto_schema(operation_description="User updation",request_body=UserProfile,
-    responses={200: "{'status':True,'message': 'User updated successfully'}",400:"Passes an error message"})
+    @swagger_auto_schema(operation_description="Update details of the logged-in user.",
+        request_body=openapi.Schema(type=openapi.TYPE_OBJECT,properties={'username': openapi.Schema(type=openapi.TYPE_STRING, description="Updated username of the user"),'email': openapi.Schema(type=openapi.TYPE_STRING, description="Updated email of the user"),
+        'other_field': openapi.Schema(type=openapi.TYPE_STRING, description="Other fields as required"),}),
+        responses={200: "{'status': True, 'message': 'User updated successfully'}",403: "{'status': False, 'message': 'User does not exist'}",400: "Returns validation errors or {'status': False, 'message': 'Token is not passed'}",})
     async def patch(self,request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -482,8 +511,10 @@ class UserView(APIView):
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    @swagger_auto_schema(operation_description="User deletion",request_body=UserSerial,
-    responses={200: "{'status':True,'message': 'User deleted successfully'}",400:"Passes an error message"})
+    @swagger_auto_schema(
+        operation_description="Delete the logged-in user's account.",
+        responses={200: "{'status': True, 'message': 'User deleted successfully'}",403: "{'status': False, 'message': 'User does not exist'}",400: "{'status': False, 'message': 'Token is not passed'}",},
+        manual_parameters=[openapi.Parameter('token', openapi.IN_HEADER,description="Authentication token of the logged-in user.", type=openapi.TYPE_STRING, required=True)])
     async def delete(self,request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -522,12 +553,14 @@ class Search(APIView):
                         query &= Q(range_starting__gte=float(request.GET.get('range_starting')))
                     if request.GET.get('range_ending'):
                         query &= Q(range_ending__lte=float(request.GET.get('range_ending')))
-                    if request.GET.get('ebitda'):
+					if request.GET.get('ebitda'):
                         query &= Q(ebitda__icontains=request.GET.get('ebitda'))
                     if request.GET.get('preference'):
                         query &= Q(preference__contains=request.GET.get('preference '))
                     if request.GET.get('top_selling'):
                         query &= Q(top_selling__icontains=request.GET.get('top_selling'))
+                    							 
+															 
                     search = [posts async for posts in SaleProfiles.objects.filter(query)]
                 serialized_data = await serialize_data(search, SaleProfilesSerial)
                 return Response({'status':True,'data':serialized_data}, status=status.HTTP_200_OK)
@@ -621,11 +654,11 @@ class RecentActs(APIView):
                 already_exists = await RecentActivity.objects.filter(user=user, product=product).aexists()
                 if already_exists:
                     recent = await RecentActivity.objects.filter(user=user,product=product).adelete()
-                    product.impressions -= 1
+					product.impressions -= 1
                 saved, resp = await create_serial(RecentSerial, data)
                 if saved:
                     product.impressions += 1
-                    await product.asave()
+                    await product.asave()				 
                     return Response({'status':True}, status=status.HTTP_200_OK)
                 return Response(serializer.errors)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
@@ -709,7 +742,7 @@ class Transactions(APIView):
 
 # Preferences
 class Prefer(APIView):
-    @swagger_auto_schema(operation_description="Get preference details for the user", 
+	@swagger_auto_schema(operation_description="Get preference details for the user", 
                           responses={200: "Preference details fetched successfully", 400: "Error message"})
     async def get(self, request):
         if request.headers.get('token'):
@@ -724,7 +757,7 @@ class Prefer(APIView):
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    @swagger_auto_schema(operation_description="Preference details creation",request_body=PrefSerial,
+ @swagger_auto_schema(operation_description="Preference details creation",request_body=PrefSerial,
     responses={200: "{'status':True,'message': 'Preference details created successfully'}",400:"Passes an error message"})
     async def post(self,request):
         if request.headers.get('token'):
@@ -743,7 +776,7 @@ class Prefer(APIView):
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    @swagger_auto_schema(operation_description="Partially update preference details",
+	@swagger_auto_schema(operation_description="Partially update preference details",
         request_body=PrefSerial,responses={200: "Preference details updated successfully",400: "Error message"})
     async def patch(self, request, id):
         if request.headers.get('token'):
@@ -767,7 +800,7 @@ class Prefer(APIView):
                 await prefer.adelete()
                 return Response({'status':True}, status=status.HTTP_200_OK)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)																								   
 
 # Recommended Posts
 class Recommended(APIView):
@@ -993,6 +1026,9 @@ class Contact(APIView):
 
 # Check userid of logged user
 class User(APIView):
+    @swagger_auto_schema(operation_description="Fetch the User ID based on the authentication token.",
+    manual_parameters=[openapi.Parameter('token', openapi.IN_HEADER,description="Authentication token of the logged-in user.",type=openapi.TYPE_STRING,required=True)],
+    responses={200: openapi.Response(description="User ID fetched successfully."),403: openapi.Response(description="User does not exist or is blocked."),400: openapi.Response(description="Token is not passed."),})
     async def get(self, request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -1003,6 +1039,11 @@ class User(APIView):
 
 # Update onesignal id of a user after login
 class OneSignal(APIView):
+    @swagger_auto_schema(operation_description="Update the user's OneSignal ID based on the authentication token.",
+    request_body=openapi.Schema(type=openapi.TYPE_OBJECT,properties={'onesignal_id': openapi.Schema(type=openapi.TYPE_STRING, description='The new OneSignal ID to be updated.')},
+    required=['onesignal_id']),
+    responses={200: openapi.Response(description="OneSignal ID updated successfully."),400: openapi.Response(description="Invalid request or missing token."),
+    403: openapi.Response(description="User does not exist or is blocked."),409: openapi.Response(description="OneSignal ID already exists."),})
     async def post(self, request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
