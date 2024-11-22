@@ -306,7 +306,7 @@ class AdvisorView(APIView):
     def get(self, request,*args,**kw):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
-                serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='advisor').order_by('-id'), many=True)
+                serializer = ProfileSerial(Profile.objects.filter(entity_type='advisor').order_by('-id'), many=True)
                 return Response(serializer.data)
             return Response({'status': False, 'message': 'User does not exist'})
         return Response({'status': False, 'message': 'Token is not passed'})
@@ -340,9 +340,9 @@ class AdvisorView(APIView):
     def patch(self, request, id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
-                advisor = SaleProfiles.objects.get(id=id)
+                advisor = Profile.objects.get(id=id)
                 mutable_data = request.data.copy()
-                serializer = SaleProfilesSerial(advisor, data=mutable_data, partial=True)
+                serializer = ProfileSerial(advisor, data=mutable_data, partial=True)
                 if serializer.is_valid():
                     serializer.save()
                     return Response({'status': True, 'message': 'Advisor updated successfully'})
@@ -378,7 +378,7 @@ class AdvisorView(APIView):
     def delete(self, request, id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
-                advisor = SaleProfiles.objects.get(id=id)
+                advisor = Profile.objects.get(id=id)
                 advisor.delete()
                 return Response({'status': True, 'message': 'Advisor deleted successfully'})
             return Response({'status': False, 'message': 'User does not exist'})
