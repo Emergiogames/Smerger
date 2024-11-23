@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from .models import *
 from .serializers import *
-from rest_framework.views import APIView
+# from rest_framework.views import APIView
+from adrf.views import APIView
 from rest_framework.response import Response
 from django.db.models import Q
 from .utils.enc_utils import *
