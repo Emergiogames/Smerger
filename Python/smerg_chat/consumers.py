@@ -40,10 +40,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         file_name = None
         if data.get('audio'):
             audio = self.decode_data(data.get('audio'))
-        recieved, created, room_data = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), audio)
+        recieved, created, room_data, audio = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), audio)
         response = {
             'message': data.get('message'),
-            'audio': data.get('audio'),
+            'audio': audio,
             'roomId': data.get('roomId'),
             'token': data.get('token'),
             'sendedTo': recieved,
@@ -112,7 +112,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S')
         }
-        return recieved.id, created, room_data
+        return recieved.id, created, room_data, chat.audio
 
 class RoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
