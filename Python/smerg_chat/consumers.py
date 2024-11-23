@@ -136,11 +136,11 @@ class RoomConsumer(AsyncWebsocketConsumer):
             }
 
             await self.channel_layer.group_send(
-                self.room_group_name,
+                'room_updates',
                 {
-                    "type": "room_message",
-                    "room_data": room_data,
-                },
+                    'type': 'room_message',
+                    'room_data': room_data
+                }
             )
             await asyncio.sleep(5)
 
