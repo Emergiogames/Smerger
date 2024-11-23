@@ -96,7 +96,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'last_msg': decrypt_message(room.last_msg) if room.last_msg else '',
             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S'),
             'active': recieved.is_active,
-            'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S'),
+            'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S')
         }
         print(room_data)
