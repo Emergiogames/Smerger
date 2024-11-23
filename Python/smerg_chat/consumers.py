@@ -35,8 +35,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         print('Received', text_data)
         data = json.loads(text_data)
-        audio = self.decode_data(data.get('audio')) if data.get('audio') else None
-        recieved, created, room_data = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), audio)
+        audio = None
+        file_name = None
+        if data.get('audio'):
+            audio = self.decode_data(data.get('audio'))
+            file_name = data.get('fileName', f"audio_{datetime.now().strftime('%Y%m%d_%H%M%S')}.wav")
+        recieved, created, room_data = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), audio, file_name=file_name)
         response = {
             'message': data.get('message'),
             'audio': data.get('audio'),
