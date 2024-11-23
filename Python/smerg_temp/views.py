@@ -365,13 +365,14 @@ class Banners(APIView):
                     banners = Banner.objects.filter(validity_date__gte=timezone.now())
                     if banner_type != 'all':
                         banners = banners.filter(type=banner_type)
-                    all_banners = Banner.objects.filter(type='all', validity_date__gte=timezone.now())
+                    all_banners = Banner.objects.filter(validity_date__gte=timezone.now())
                     banners = banners | all_banners 
 
                     serializer = BannerSerial(banners.order_by('-id'), many=True)
                 return Response(serializer.data)
             return Response({'status':False,'message': 'User doesnot exist'})
         return Response({'status':False,'message': 'Token is not passed'})
+
     @swagger_auto_schema(operation_description="Banners creation",request_body=BannerSerial,
     responses={200: "{'status':True,'message': 'Banners created successfully'}",400:"Passes an error message"})
     def post(self,request):
@@ -379,8 +380,8 @@ class Banners(APIView):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
                 serializer = BannerSerial(data = request.data)
                 if serializer.is_valid():
-                    if 'type' not in request.data or 'valid_date' not in request.data:
-                        return Response({'status': False,'message': 'Type and valid_date are required'}, status=status.HTTP_400_BAD_REQUEST)
+                    if 'type' not in request.data or 'validity_date' not in request.data:
+                        return Response({'status': False,'message': 'Type and validity date are required'}, status=status.HTTP_400_BAD_REQUEST)
                     serializer.save()
                     return Response({'status':True})
                 return Response(serializer.errors)

@@ -277,7 +277,6 @@ class Activity(models.Model):
     created = models.DateTimeField(auto_now_add=True)  # Timestamp for the first interaction
     count = models.PositiveIntegerField(default=1,null=True)
 
-
 # Report model
 class Report(models.Model):
     REPORT_TYPE_CHOICES = [
