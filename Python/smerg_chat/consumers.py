@@ -38,9 +38,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         data = json.loads(text_data)
         audio = None
         file_name = None
-        if data.get('audio'):
-            audio = self.decode_data(data.get('audio'))
-        recieved, created, room_data, audio = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), audio)
+        # if data.get('audio'):
+        #     audio = self.decode_data(data.get('audio'))
+        recieved, created, room_data, audio = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), data.get('audio'))
         response = {
             'message': data.get('message'),
             'audio': audio,
@@ -92,6 +92,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if audio:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f'audio_{self.user.username}_{timestamp}.wav'
+            decoded_audio = asyncio.run(self.decode_data(audio))
             chat.audio.save(filename, ContentFile(audio))
         print(chat)
         created = chat.timestamp
