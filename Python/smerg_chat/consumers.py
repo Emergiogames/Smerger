@@ -99,6 +99,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S'),
             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S')
         }
+        print(room_data)
         return recieved.id, created, room_data
 
 class RoomConsumer(AsyncWebsocketConsumer):
