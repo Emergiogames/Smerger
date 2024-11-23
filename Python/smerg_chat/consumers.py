@@ -128,11 +128,11 @@ class RoomConsumer(AsyncWebsocketConsumer):
         self.keep_running = False
         self.task.cancel()
 
-    async def send_periodic_updates(self):
+    async def send_periodic_updates(self, user):
         while self.keep_running:
             room_data = {
-                'active': recieved.is_active,
-                'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
+                'active': user.is_active,
+                'last_seen': user.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
             }
 
             await self.channel_layer.group_send(
