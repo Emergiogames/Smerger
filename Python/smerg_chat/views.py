@@ -52,7 +52,7 @@ class Chat(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                chats = [chat async for chat in ChatMessage.objects.filter(Q(first_person=user) | Q(second_person=user)).order_by('-id')] 
+                chats = [chat async for chat in ChatMessage.objects.filter(room__id = request.GET.get('roomId')).order_by('-id')] 
                 serialized_data = await serialize_data(chats, ChatSerial)
                 return Response(serialized_data)
             return Response({'status':False,'message': 'User doesnot exist'})
