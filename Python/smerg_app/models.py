@@ -31,6 +31,9 @@ class UserProfile(AbstractUser):
     image = models.FileField(upload_to='profile/images', null=True, blank=True)
     onesignal_id = models.CharField(max_length=100, null=True, blank=True)
     block = models.BooleanField(default=False)
+    total_hr_spend = models.FloatField(default=0.0)
+    active_from = models.DateTimeField(null=True, blank=True)
+    inactive_from = models.DateTimeField(null=True, blank=True)
 
     objects = CustomUserManager()
 
