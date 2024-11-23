@@ -94,7 +94,8 @@ class RegisterView(APIView):
             if int(stored_otp) == int(request.data.get('otp')):
                 await sync_to_async(cache.delete)(key)
                 exists, user = await check_exists(request.data.get('phone'))
-                if exists:
+                email_exists, user = await check_email(request.data.get('email'))
+                if exists or email_exists:
                     return Response({'status':False,'message': 'User already exists'}, status=status.HTTP_403_FORBIDDEN)
                 request.data['username'] = request.data.get('phone')
 
