@@ -128,9 +128,8 @@ class RoomConsumer(AsyncWebsocketConsumer):
     async def periodic_room_updates(self):
         while True:
             room_data = {
-                'timestamp': timezone.now().isoformat(),
-                'active_user': self.user.username,
-                'last_active': self.user.active_from.isoformat(),
+                'active': self.user.username,
+                'last_seen': self.user.active_from.isoformat(),
             }
             
             await self.channel_layer.group_send(
