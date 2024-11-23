@@ -126,8 +126,8 @@ class RoomConsumer(AsyncWebsocketConsumer):
             {
                 'type': 'room_message',
                 'room_data': {
-                    'active_user': self.user.username,
-                    'last_active': self.user.active_from.isoformat(),
+                    'active': self.user.username,
+                    'last_seen': self.user.inactive_from.strftime('%Y-%m-%d %H:%M:%S'),
                 }
             })
         await self.channel_layer.group_discard(self.room_group_name,self.channel_name)
