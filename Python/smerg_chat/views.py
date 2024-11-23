@@ -54,7 +54,7 @@ class Chat(APIView):
             if exists:
                 chats = [chat async for chat in ChatMessage.objects.filter(room__id = request.GET.get('roomId')).order_by('-id')] 
                 serialized_data = await serialize_data(chats, ChatSerial)
-                room   = await Room.objects.aget(id = request.GET.get('roomId'))
+                room   = await Room.objects.select_related('first_person', 'second_person').aget(id = request.GET.get('roomId'))
                 if user.id == room.first_person.id:
                     number = room.second_person.username
                 else:
