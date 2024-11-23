@@ -55,7 +55,10 @@ class Chat(APIView):
                 chats = [chat async for chat in ChatMessage.objects.filter(room__id = request.GET.get('roomId')).order_by('-id')] 
                 serialized_data = await serialize_data(chats, ChatSerial)
                 room   = await Room.objects.aget(id = request.GET.get('roomId'))
-                number = room.second_person.username if user.id == room.first_person.id else room.first_person.username
+                if user_id == room.first_person.id:
+                    number = room.second_person.username
+                else:
+                    number = room.first_person.username
                 return Response({'messages': serialized_data, 'number': number })
             return Response({'status':False,'message': 'User doesnot exist'})
         return Response({'status':False,'message': 'Token is not passed'})
