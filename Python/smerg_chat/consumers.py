@@ -35,9 +35,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         print('Received', text_data)
         data = json.loads(text_data)
-        recieved, created, room_data = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'))
+        recieved, created, room_data = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), data.get('audio'))
         response = {
             'message': data.get('message'),
+            'audio': data.get('audio'),
             'roomId': data.get('roomId'),
             'token': data.get('token'),
             'sendedTo': recieved,
@@ -75,10 +76,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     # Saving Message to Db
     @sync_to_async
-    def save_message(self, roomId, token, msg):
+    def save_message(self, roomId, token, msg, audio):
         room = Room.objects.get(id=roomId)
         recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
-        chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg))
+        chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg), audio=audio)
         print(chat)
         created = chat.timestamp
         room.last_msg = encrypt_message(msg)

@@ -37,7 +37,7 @@ class LoginView(APIView):
     properties={'username': openapi.Schema(type=openapi.TYPE_STRING, description='Username for authentication'),'password': openapi.Schema(type=openapi.TYPE_STRING, description='Password for authentication'),},),
     responses={200: '{"status": true,"token": "d08dcdfssd38ffaaa0d974fb7379e05ec1cd5b95"}',400:'{"status": false,"message": "Invalid credentials"}'})
     async def post(self,request):
-        exists, user = await check_exists(username, request.data.get('phone'))
+        exists, user = await check_exists(request.data.get('phone'))
         if exists:
             if check_password(request.data.get('password'), user.password):
                 if not user.block:
@@ -52,7 +52,7 @@ class Social(APIView):
     properties={'username': openapi.Schema(type=openapi.TYPE_STRING, description='Username/ Email for authentication'),},),
     responses={200: "{'status':True,'message': 'Verify if user is in DB using social media successfully'}",400:"Passes an error message"})
     async def post(self,request):
-        exists, user = await check_exists(username, request.data.get('phone'))
+        exists, user = await check_email(request.data.get('username'))
         if exists:
             token = await Token.objects.aget(user=user)
             return Response({'status':True,'token':token.key}, status=status.HTTP_200_OK)
@@ -67,7 +67,8 @@ class RegisterOtp(APIView):
     async def post(self,request):
         if request.data.get('phone') and request.data.get('email'):
             exists, user = await check_exists(request.data.get('phone'))
-            if exists:
+            email_exists, user = await check_email(request.data.get('email'))
+            if exists or email_exists:
                 return Response({'status':False,'message': 'User with same phone number/email id already exist'}, status=status.HTTP_403_FORBIDDEN)
             otp = random.randint(1111,9999)
             key = f'otp_{request.data.get('phone')}'

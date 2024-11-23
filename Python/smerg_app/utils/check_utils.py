@@ -16,6 +16,13 @@ async def check_exists(value):
         return True, user
     return False, None
 
+async def check_email(value):
+    exist = await UserProfile.objects.filter(email=value).aexists()
+    if exist:
+        user = await UserProfile.objects.aget(email=value)
+        return True, user
+    return False, None
+
 async def check_subscription(user, type=None):
     filter_kwargs = {"user": user}
     if type is not None:
