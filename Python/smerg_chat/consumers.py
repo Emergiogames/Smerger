@@ -114,9 +114,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
         self.room_group_name = 'room_updates'
         await self.channel_layer.group_add(self.room_group_name,self.channel_name)
         await self.accept()
-
-        self.keep_running = True
-        self.task = asyncio.create_task(self.send_periodic_updates(self.user))
+        self.periodic_update_task = asyncio.create_task(self.periodic_room_updates())
 
     async def disconnect(self, close_code):
         self.user.is_active = False
@@ -125,24 +123,24 @@ class RoomConsumer(AsyncWebsocketConsumer):
         self.user.total_hr_spend += round(total_hr_spend.total_seconds() / 3600, 2)
         await self.user.asave()
         await self.channel_layer.group_discard(self.room_group_name,self.channel_name)
-        self.keep_running = False
-        self.task.cancel()
+        self.periodic_update_task.cancel()
 
-    async def send_periodic_updates(self, user):
-        while self.keep_running:
-            print("Working....")
+    async def periodic_room_updates(self):
+        while True:
             room_data = {
-                'active': user.is_active,
-                'last_seen': user.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
+                'timestamp': timezone.now().isoformat(),
+                'active_user': self.user.username,
+                'last_active': self.user.active_from.isoformat(),
             }
-
+            
             await self.channel_layer.group_send(
-                'room_updates',
+                self.room_group_name,
                 {
                     'type': 'room_message',
                     'room_data': room_data
                 }
             )
+            
             await asyncio.sleep(5)
 
     async def room_message(self, event):
