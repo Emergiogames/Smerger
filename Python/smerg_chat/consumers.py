@@ -126,7 +126,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
             {
                 'type': 'room_message',
                 'room_data': {
-                    'active': self.user.username,
+                    'active': self.user.is_active,
                     'last_seen': self.user.inactive_from.strftime('%Y-%m-%d %H:%M:%S'),
                 }
             })
