@@ -88,7 +88,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def save_message(self, roomId, token, msg, audio, file_name):
         room = Room.objects.get(id=roomId)
         recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
-        chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg), audio=file_name)
+        chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg))
+        if audio_data and file_name:
+            audio_content = ContentFile(audio)
+            chat.audio.save(
+                name=file_name,
+                content=audio_content,
+                save=False
+            )
+        chat.save()
         print(chat)
         created = chat.timestamp
         room.last_msg = encrypt_message(msg)
