@@ -130,6 +130,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
 
     async def send_periodic_updates(self, user):
         while self.keep_running:
+            print("Working....")
             room_data = {
                 'active': user.is_active,
                 'last_seen': user.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
