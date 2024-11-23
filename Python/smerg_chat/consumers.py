@@ -1,4 +1,4 @@
-import json, os, asyncio
+import json, os, asyncio, base64
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smerger.settings")
 
 import django
@@ -35,7 +35,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         print('Received', text_data)
         data = json.loads(text_data)
-        recieved, created, room_data = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), data.get('audio'))
+        audio = self.decode_data(data.get('audio')) if data.get('audio') else None
+        recieved, created, room_data = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), audio)
         response = {
             'message': data.get('message'),
             'audio': data.get('audio'),
@@ -74,6 +75,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.chatroom, self.channel_name)
 
+    async def decode_data(self, audio):
+        audio_bytes = base64.b64decode(audio)
+        return audio_bytes
+
     # Saving Message to Db
     @sync_to_async
     def save_message(self, roomId, token, msg, audio):
@@ -99,7 +104,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S')
         }
-        print(room_data)
         return recieved.id, created, room_data
 
 class RoomConsumer(AsyncWebsocketConsumer):
