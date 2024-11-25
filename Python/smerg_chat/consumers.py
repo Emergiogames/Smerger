@@ -99,7 +99,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             with open(file_path, 'wb') as f:
                 pass
 
-            decoded_audio = base64.b64decode(audio)
+            # decoded_audio = base64.b64decode(audio)
             audio_file = ContentFile(audio, name=filename)
             chat.audio.save(filename, audio_file, save=True)
         chat.save()
