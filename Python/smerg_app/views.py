@@ -866,7 +866,7 @@ class Subscribe(APIView):
             if exists:
                 # subscribed, value = await check_subscription(user, request.data.get('type'))
                 if await Subscription.objects.filter(user=user, type=request.GET.get('type')).aexists():
-                    subscription = await Subscription.objects.aget(user=user, type=request.GET.get('type'))
+                    subscription = await Subscription.objects.aget(user=user, plan__type=request.GET.get('type'))
                     if value.remaining_posts != 0 and value.expiry_date >= timezone.now().date():
                         plan_id = await sync_to_async(lambda: value.plan.id)()
                         return Response({'status':True, 'id':plan_id, 'posts':value.remaining_posts, "expiry":value.expiry_date, 'plan':value})
