@@ -92,14 +92,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
             # Decode the Base64 encoded audio data
             audio_bytes = base64.b64decode(audio)
             # Use ContentFile to wrap the decoded bytes
-            audio_file = ContentFile(audio_bytes)
+            # audio_file = ContentFile(audio_bytes)
 
             # Save the file to the model
-            with open(output_filename, "wb") as file:
+            with open(filename, "wb") as file:
                 file.write(audio_bytes)
 
-            with open(output_filename, "rb") as file:
-                chat.audio.save(output_filename, File(file))
+            with open(filename, "rb") as file:
+                chat.audio.save(filename, File(file))
             chat.save()
         print(chat)
         created = chat.timestamp
