@@ -92,7 +92,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             fs = FileSystemStorage(location=settings.MEDIA_ROOT)
 
             # Save the file to the disk using FileSystemStorage
-            file = File(ContentFile(audio_bytes), name=filename)
+            file = File(ContentFile(audio), name=filename)
             
             # Save the file and get the filename
             filename = fs.save(f'audio_files/{filename}', file)  # save under 'audio_files' subdirectory
