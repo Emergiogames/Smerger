@@ -88,6 +88,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             print(audio)
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f'audio_{self.user.username}_{timestamp}.txt'
+            decoded_audio = base64.b64decode(audio)
             
             directory = os.path.join(settings.MEDIA_ROOT, 'chat', 'records')
             print(directory)
@@ -97,10 +98,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             file_path = os.path.join(directory, filename)
             print(file_path)
             with open(file_path, 'wb') as f:
-                pass
+                f.write(decoded_audio)
 
-            decoded_audio = base64.b64decode(audio)
-            audio_file = ContentFile(decoded_audio, name=filename)
+            audio_file = ContentFile(f, name=filename)
             chat.audio.save(filename, audio_file, save=True)
         chat.save()
         print(chat)
