@@ -91,8 +91,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             filename = f'audio_{self.user.username}_{timestamp}.m4a'
             fs = FileSystemStorage(location=settings.MEDIA_ROOT)
 
+            audio_bytes = base64.b64decode(audio)
             # Save the file to the disk using FileSystemStorage
-            file = File(ContentFile(audio), name=filename)
+            file = File(ContentFile(audio_bytes), name=filename)
             
             # Save the file and get the filename
             filename = fs.save(f'audio_files/{filename}', file)  # save under 'audio_files' subdirectory
@@ -104,7 +105,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             chat.audio = file
 
             # Decode the Base64 encoded audio data
-            # audio_bytes = base64.b64decode(audio)
 
             # # Use ContentFile to wrap the decoded bytes
             # audio_file = ContentFile(audio_bytes)
