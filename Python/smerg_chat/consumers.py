@@ -15,7 +15,7 @@ from .utils.noti_utils import *
 from datetime import datetime
 from django.utils import timezone
 from channels.layers import get_channel_layer
-from django.core.files.base import ContentFile
+from django.core.files.base import ContentFile, File
 from smerg_app.utils.check_utils import *
 
 class ChatConsumer(AsyncWebsocketConsumer):
