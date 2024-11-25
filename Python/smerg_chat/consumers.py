@@ -99,7 +99,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 file.write(audio_bytes)
 
             with open(filename, "rb") as file:
-                chat.audio.save(filename, File(file))
+                chat.audio.save(filename, File(file), save=True)
             chat.save()
         print(chat)
         created = chat.timestamp
