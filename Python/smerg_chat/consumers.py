@@ -92,7 +92,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             upload_dir.mkdir(parents=True, exist_ok=True)
             
             # Generate file path
-            file_path = upload_dir / file_name
+            file_path = upload_dir / filename
             
             # Save the base64 string directly to a file
             with open(file_path, 'w') as f:
