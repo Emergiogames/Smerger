@@ -77,7 +77,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.chatroom, self.channel_name)
 
-    async def decode_data(self, audio):
+    def decode_data(self, audio):
         audio_bytes = base64.b64decode(audio)
         return audio_bytes
 
@@ -90,7 +90,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if audio:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f'audio_{self.user.username}_{timestamp}.m4a'
-            decoded_audio = asyncio.run(self.decode_data(audio))
+            # decoded_audio = asyncio.run(self.decode_data(audio))
+            decoded_audio = self.decode_data(audio)
             print(f"Decoded audio size: {len(decoded_audio) if decoded_audio else 'No data returned'}")
             audio_file = ContentFile(decoded_audio)
             chat.audio.save(filename, audio_file, save=True)
