@@ -85,6 +85,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
         chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg))
         if audio:
+            print(audio)
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f'audio_{self.user.username}_{timestamp}.txt'
             
