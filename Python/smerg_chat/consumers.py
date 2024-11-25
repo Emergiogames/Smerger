@@ -88,9 +88,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f'audio_{self.user.username}_{timestamp}.txt'
             # decoded_audio = base64.b64decode(audio)
-            # audio_string = decoded_audio.decode('utf-8')
-            audio_file = ContentFile(audio, name=filename)
-            chat.audio.save(filename, audio_file, save=True)
+            # audio_file = ContentFile(audio, name=filename)
+            # chat.audio.save(filename, audio_file, save=True)
+
+            try:
+                # Create the ContentFile
+                audio_file = ContentFile(audio_data, name=filename)
+                
+                # Save the audio file
+                chat.audio.save(filename, audio_file, save=False)
+                
+                # Save the model instance
+                chat.save()
+                
+                print(f"Audio file saved successfully: {filename}")
+            except Exception as e:
+                print( f"Error saving audio file: {str(e)}")
         chat.save()
         print(chat)
         created = chat.timestamp
