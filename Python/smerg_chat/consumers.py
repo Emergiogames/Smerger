@@ -88,7 +88,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f'audio_{self.user.username}_{timestamp}.m4a'
             
-            directory = 'uploads/chat/records'
+            directory = 'chat/records'
             os.makedirs(directory, exist_ok=True)
             
             # Create empty file first
