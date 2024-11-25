@@ -871,8 +871,8 @@ class Subscribe(APIView):
                     expiry_date = await sync_to_async(lambda: subscription.expiry_date)()
                     if subscription.remaining_posts != 0 and subscription.expiry_date >= timezone.now().date():
                         plan = await sync_to_async(lambda: subscription.plan)()
-                        plan_id = await sync_to_async(lambda: subscription.plan.id)()
-                        return Response({'status':True, 'id':plan_id, 'posts':remaining_posts, "expiry":expiry_date, 'plan':plan})
+                        plan_data = await sync_to_async(lambda: PlanSerial(plan).data)()
+                        return Response({'status':True, 'id':plan_id, 'posts':remaining_posts, "expiry":expiry_date, 'plan':plan_data})
                 return Response({'status':False,'message': 'Subscription doesnot exist'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
