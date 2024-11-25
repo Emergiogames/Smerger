@@ -16,6 +16,7 @@ from datetime import datetime
 from django.utils import timezone
 from channels.layers import get_channel_layer
 from django.core.files.base import ContentFile, File
+from django.core.files.storage import FileSystemStorage
 from smerg_app.utils.check_utils import *
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -88,18 +89,28 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if audio:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f'audio_{self.user.username}_{timestamp}.m4a'
+            fs = FileSystemStorage(location=settings.MEDIA_ROOT)
+
+            # Save the file to the disk using FileSystemStorage
+            file = File(ContentFile(audio_bytes), name=filename)
+            
+            # Save the file and get the filename
+            filename = fs.save(f'audio_files/{filename}', file)  # save under 'audio_files' subdirectory
+
+            # Get the URL for the file
+            file_url = fs.url(filename)  # URL to access the file
+
+            # Attach the saved file to the model (you can store `file_url` or filename in the model)
+            chat.audio = file
 
             # Decode the Base64 encoded audio data
-            audio_bytes = base64.b64decode(audio)
-            # Use ContentFile to wrap the decoded bytes
+            # audio_bytes = base64.b64decode(audio)
+
+            # # Use ContentFile to wrap the decoded bytes
             # audio_file = ContentFile(audio_bytes)
 
-            # Save the file to the model
-            with open(filename, "wb") as file:
-                file.write(audio_bytes)
-
-            with open(filename, "rb") as file:
-                chat.audio.save(filename, File(file), save=True)
+            # # Save the file to the model
+            # chat.audio.save(filename, audio_file)
             chat.save()
         print(chat)
         created = chat.timestamp
