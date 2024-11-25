@@ -36,9 +36,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         print('Received', text_data)
         data = json.loads(text_data)
-        audio = None
-        file_name = None
-        recieved, created, room_data, audio = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), data.get('audio'))
+        decoded_audio = await self.decode_data(data.get('audio'))
+        recieved, created, room_data, audio = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), decoded_audio)
         response = {
             'message': data.get('message'),
             'audio': audio.url if audio else None,
@@ -77,7 +76,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.chatroom, self.channel_name)
 
-    def decode_data(self, audio):
+    async def decode_data(self, audio):
         audio_bytes = base64.b64decode(audio)
         return audio_bytes
 
@@ -90,11 +89,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if audio:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f'audio_{self.user.username}_{timestamp}.m4a'
-            # decoded_audio = asyncio.run(self.decode_data(audio))
-            decoded_audio = self.decode_data(audio)
-            print(f"Decoded audio size: {len(decoded_audio) if decoded_audio else 'No data returned'}")
-            audio_file = ContentFile(decoded_audio)
-            chat.audio.save(filename, audio_file, save=True)
+            chat.audio.save(filename, ContentFile(audio))
         print(chat)
         created = chat.timestamp
         room.last_msg = encrypt_message(msg)
