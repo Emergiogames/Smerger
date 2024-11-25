@@ -92,14 +92,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
             filename = f'audio_{self.user.username}_{timestamp}.m4a'
             decoded_audio = asyncio.run(self.decode_data(audio))
             if not decoded_audio:
-                raise ValueError("Decoded audio data is empty")
+                print("Decoded audio data is empty")
                 
             # Save using Django's ContentFile
             audio_file = ContentFile(decoded_audio)
             chat.audio.save(filename, audio_file, save=True)
             full_path = os.path.join(settings.MEDIA_ROOT, chat.audio.name)
+            print(full_path)
             if not os.path.exists(full_path):
-                raise FileNotFoundError(f"File was not saved at {full_path}")
+                print(f"File was not saved at {full_path}")
         print(chat)
         created = chat.timestamp
         room.last_msg = encrypt_message(msg)
