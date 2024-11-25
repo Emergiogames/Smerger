@@ -91,9 +91,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f'audio_{self.user.username}_{timestamp}.m4a'
             decoded_audio = asyncio.run(self.decode_data(audio))
-
+            print(f"Decoded audio size: {len(decoded_audio) if decoded_audio else 'No data returned'}")
             audio_file = ContentFile(decoded_audio)
-            print(f"ContentFile created: {audio_file}")
             chat.audio.save(filename, audio_file, save=True)
         print(chat)
         created = chat.timestamp
