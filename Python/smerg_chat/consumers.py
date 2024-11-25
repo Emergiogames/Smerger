@@ -17,7 +17,7 @@ from django.utils import timezone
 from channels.layers import get_channel_layer
 from django.core.files.base import ContentFile, File
 from smerg_app.utils.check_utils import *
-from io import BytesIO
+from django.conf import settings
 
 class ChatConsumer(AsyncWebsocketConsumer):
     # Connecting WS
@@ -88,7 +88,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f'audio_{self.user.username}_{timestamp}.m4a'
             
-            directory = 'chat/records'
+            directory = os.path.join(settings.MEDIA_ROOT, 'chat', 'records')
             os.makedirs(directory, exist_ok=True)
             
             # Create empty file first
