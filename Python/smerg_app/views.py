@@ -864,7 +864,7 @@ class Subscribe(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                subscribed, value = await check_subscription(user)
+                subscribed, value = await check_subscription(user, request.data.get('type'))
                 if subscribed:
                     if value.remaining_posts != 0 and value.expiry_date >= timezone.now().date():
                         plan_id = await sync_to_async(lambda: value.plan.id)()
