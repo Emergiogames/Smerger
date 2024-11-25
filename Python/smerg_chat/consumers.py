@@ -96,7 +96,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             # Create empty file first
             file_path = os.path.join(directory, filename)
             print(file_path)
-            with open(file_path, 'wb') as f:
+            with open(file_path, 'w') as f:
                 f.write(decoded_audio)
 
             audio_file = ContentFile(decoded_audio, name=filename)
