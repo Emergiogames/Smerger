@@ -97,9 +97,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             file_path = os.path.join(directory, filename)
             print(file_path)
             with open(file_path, 'w') as f:
-                f.write(decoded_audio)
+                f.write(audio)
 
-            audio_file = ContentFile(decoded_audio, name=filename)
+            audio_file = ContentFile(audio, name=filename)
             chat.audio.save(filename, audio_file, save=True)
         chat.save()
         print(chat)
