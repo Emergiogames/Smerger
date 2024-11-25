@@ -870,6 +870,7 @@ class Subscribe(APIView):
                     remaining_posts = await sync_to_async(lambda: subscription.remaining_posts)()
                     expiry_date = await sync_to_async(lambda: subscription.expiry_date)()
                     if subscription.remaining_posts != 0 and subscription.expiry_date >= timezone.now().date():
+                        plan = await sync_to_async(lambda: subscription.plan)()
                         plan = await sync_to_async(lambda: PlanSerial(plan).data)()
                         plan_id = await sync_to_async(lambda: subscription.plan.id)()
                         return Response({'status':True, 'id':plan_id, 'posts':remaining_posts, "expiry":expiry_date, 'plan':plan})
