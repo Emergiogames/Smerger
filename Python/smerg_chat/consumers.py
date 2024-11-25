@@ -91,7 +91,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             # Decode the Base64 encoded audio data
             audio_bytes = base64.b64decode(audio)
-
             # Use ContentFile to wrap the decoded bytes
             audio_file = ContentFile(audio_bytes)
 
