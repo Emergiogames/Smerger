@@ -36,6 +36,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         print('Received', text_data)
         data = json.loads(text_data)
+        decoded_audio = None
         if data.get('audio'):
             decoded_audio = await self.decode_data(data.get('audio'))
         recieved, created, room_data, audio = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), decoded_audio)
