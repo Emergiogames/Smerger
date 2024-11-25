@@ -36,10 +36,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         print('Received', text_data)
         data = json.loads(text_data)
-        decoded_audio = None
-        if data.get('audio'):
-            decoded_audio = await self.decode_data(data.get('audio'))
-        recieved, created, room_data, audio = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), decoded_audio)
+        recieved, created, room_data, audio = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), data.get('audio'))
         response = {
             'message': data.get('message'),
             'audio': audio.url if audio else None,
@@ -91,7 +88,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if audio:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f'audio_{self.user.username}_{timestamp}.m4a'
-            chat.audio.save(filename, ContentFile(audio))
+
+            # Decode the Base64 encoded audio data
+            audio_bytes = base64.b64decode(audio)
+
+            # Use ContentFile to wrap the decoded bytes
+            audio_file = ContentFile(audio_bytes)
+
+            # Save the file to the model
+            chat.audio.save(filename, audio_file)
+            chat.save()
         print(chat)
         created = chat.timestamp
         room.last_msg = encrypt_message(msg)
