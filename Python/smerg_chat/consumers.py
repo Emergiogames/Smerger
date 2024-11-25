@@ -89,10 +89,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             filename = f'audio_{self.user.username}_{timestamp}.m4a'
             
             directory = os.path.join(settings.MEDIA_ROOT, 'chat', 'records')
+            print(directory)
             os.makedirs(directory, exist_ok=True)
             
             # Create empty file first
             file_path = os.path.join(directory, filename)
+            print(file_path)
             with open(file_path, 'wb') as f:
                 pass
 
