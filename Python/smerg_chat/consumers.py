@@ -41,7 +41,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         recieved, created, room_data, audio = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), data.get('audio'))
         response = {
             'message': data.get('message'),
-            'audio': audio.url,
+            'audio': audio.url if audio else None,
             'roomId': data.get('roomId'),
             'token': data.get('token'),
             'sendedTo': recieved,
