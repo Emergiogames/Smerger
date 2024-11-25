@@ -17,6 +17,7 @@ from django.utils import timezone
 from channels.layers import get_channel_layer
 from django.core.files.base import ContentFile, File
 from smerg_app.utils.check_utils import *
+from io import BytesIO
 
 class ChatConsumer(AsyncWebsocketConsumer):
     # Connecting WS
@@ -92,7 +93,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             filename = f'audio_{self.user.username}_{timestamp}.m4a'
             decoded_audio = asyncio.run(self.decode_data(audio))
             # audio_file = ContentFile(decoded_audio)
-            audio_file = io.BytesIO(decoded_audio)
+            audio_file = BytesIO(decoded_audio)
             chat.audio.save(filename, File(audio_file), save=True)
         print(chat)
         created = chat.timestamp
