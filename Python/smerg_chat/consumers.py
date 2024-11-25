@@ -18,8 +18,102 @@ from channels.layers import get_channel_layer
 from django.core.files.base import ContentFile
 from smerg_app.utils.check_utils import *
 
+# class ChatConsumer(AsyncWebsocketConsumer):
+#     # Connecting WS
+#     async def connect(self):
+#         print('Connected')
+#         token = self.scope['query_string'].decode().split('=')[-1]
+#         id = self.scope['url_route']['kwargs']['id']
+#         if not token:
+#             await self.close()
+#             return
+#         exists, self.user = await check_user(token)
+#         self.chatroom = f'user_chatroom_{id}'
+#         await self.channel_layer.group_add(self.chatroom, self.channel_name)
+#         await self.accept()
+
+#     # Receive Message from Frontend
+#     async def receive(self, text_data):
+#         print('Received', text_data)
+#         data = json.loads(text_data)
+#         audio = None
+#         file_name = None
+#         recieved, created, room_data, audio = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), data.get('audio'))
+#         response = {
+#             'message': data.get('message'),
+#             'audio': audio.url if audio else None,
+#             'roomId': data.get('roomId'),
+#             'token': data.get('token'),
+#             'sendedTo': recieved,
+#             'sendedBy': self.user.id,
+#             'time': str(created)
+#         }
+
+#         ## Send Message
+#         room_group_name = f'user_chatroom_{data.get('roomId')}'
+#         await self.channel_layer.group_send(
+#             room_group_name,
+#             {
+#                 'type': 'chat_message',
+#                 'text': json.dumps(response)
+#             }
+#         )
+
+#         ## Update Room Data
+#         await self.channel_layer.group_send(
+#             'room_updates',
+#             {
+#                 'type': 'room_message',
+#                 'room_data': room_data
+#             }
+#         )
+
+#     # Sending Message to Frontend
+#     async def chat_message(self, event):
+#         print('Chat Message', event)
+#         await self.send(text_data=event['text'])
+
+#     # Disconnecting WS
+#     async def disconnect(self, close_code):
+#         await self.channel_layer.group_discard(self.chatroom, self.channel_name)
+
+#     async def decode_data(self, audio):
+#         audio_bytes = base64.b64decode(audio)
+#         return audio_bytes
+
+#     # Saving Message to Db
+#     @sync_to_async
+#     def save_message(self, roomId, token, msg, audio):
+#         room = Room.objects.get(id=roomId)
+#         recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
+#         chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg))
+#         if audio:
+#             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+#             filename = f'audio_{self.user.username}_{timestamp}.wav'
+#             decoded_audio = asyncio.run(self.decode_data(audio))
+#             chat.audio.save(filename, ContentFile(decoded_audio), save=True)
+#         print(chat)
+#         created = chat.timestamp
+#         room.last_msg = encrypt_message(msg)
+#         room.updated = datetime.now()
+#         room.save()
+#         room_data = {
+#             'id': room.id,
+#             'first_person': room.first_person.id,
+#             'first_name': room.first_person.first_name,
+#             'first_image': room.first_person.image.url if room.first_person.image else None,
+#             'second_person': room.second_person.id,
+#             'second_name': room.second_person.first_name,
+#             'second_image': room.second_person.image.url if room.second_person.image else None,
+#             'last_msg': decrypt_message(room.last_msg) if room.last_msg else '',
+#             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S'),
+#             'active': recieved.is_active,
+#             'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
+#             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S')
+#         }
+#         return recieved.id, created, room_data, chat.audio
+
 class ChatConsumer(AsyncWebsocketConsumer):
-    # Connecting WS
     async def connect(self):
         print('Connected')
         token = self.scope['query_string'].decode().split('=')[-1]
@@ -32,90 +126,140 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_add(self.chatroom, self.channel_name)
         await self.accept()
 
-    # Receive Message from Frontend
     async def receive(self, text_data):
-        print('Received', text_data)
-        data = json.loads(text_data)
-        audio = None
-        file_name = None
-        recieved, created, room_data, audio = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), data.get('audio'))
-        response = {
-            'message': data.get('message'),
-            'audio': audio.url if audio else None,
-            'roomId': data.get('roomId'),
-            'token': data.get('token'),
-            'sendedTo': recieved,
-            'sendedBy': self.user.id,
-            'time': str(created)
-        }
+        try:
+            print('Received', text_data)
+            data = json.loads(text_data)
+            
+            # Handle voice message specifically
+            is_voice_message = 'audio' in data and data.get('messageType') == 'voice'
+            message = 'Voice Message' if is_voice_message else data.get('message')
+            duration = data.get('duration') if is_voice_message else None
+            
+            recieved, created, room_data, audio_file = await self.save_message(
+                data.get('roomId'), 
+                data.get('token'),
+                message,
+                data.get('audio')
+            )
 
-        ## Send Message
-        room_group_name = f'user_chatroom_{data.get('roomId')}'
-        await self.channel_layer.group_send(
-            room_group_name,
-            {
-                'type': 'chat_message',
-                'text': json.dumps(response)
+            response = {
+                'messageType': 'voice' if is_voice_message else 'text',
+                'message': message,
+                'audio': audio_file.url if audio_file else None,
+                'duration': duration,  # Include duration for voice messages
+                'roomId': data.get('roomId'),
+                'token': data.get('token'),
+                'sendedTo': recieved,
+                'sendedBy': self.user.id,
+                'time': str(created)
             }
-        )
 
-        ## Update Room Data
-        await self.channel_layer.group_send(
-            'room_updates',
-            {
-                'type': 'room_message',
-                'room_data': room_data
+            # Send Message
+            room_group_name = f'user_chatroom_{data.get("roomId")}'
+            await self.channel_layer.group_send(
+                room_group_name,
+                {
+                    'type': 'chat_message',
+                    'text': json.dumps(response)
+                }
+            )
+
+            # Update Room Data
+            await self.channel_layer.group_send(
+                'room_updates',
+                {
+                    'type': 'room_message',
+                    'room_data': room_data
+                }
+            )
+        except Exception as e:
+            print(f"Error in receive: {str(e)}")
+            error_response = {
+                'error': 'Failed to process message',
+                'details': str(e)
             }
-        )
+            await self.send(text_data=json.dumps(error_response))
 
-    # Sending Message to Frontend
     async def chat_message(self, event):
-        print('Chat Message', event)
-        await self.send(text_data=event['text'])
+        try:
+            print('Chat Message', event)
+            await self.send(text_data=event['text'])
+        except Exception as e:
+            print(f"Error in chat_message: {str(e)}")
 
-    # Disconnecting WS
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.chatroom, self.channel_name)
 
     async def decode_data(self, audio):
-        audio_bytes = base64.b64decode(audio)
-        return audio_bytes
+        try:
+            audio_bytes = base64.b64decode(audio)
+            return audio_bytes
+        except Exception as e:
+            print(f"Error decoding audio data: {str(e)}")
+            raise
 
-    # Saving Message to Db
     @sync_to_async
     def save_message(self, roomId, token, msg, audio):
-        room = Room.objects.get(id=roomId)
-        recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
-        chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg))
-        if audio:
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f'audio_{self.user.username}_{timestamp}.m4a'
-            decoded_audio = asyncio.run(self.decode_data(audio))
-            chat.audio.save(filename, ContentFile(decoded_audio), save=True)
-            if chat.audio and os.path.exists(chat.audio.path):
-                print(f"Audio saved successfully at: {chat.audio.path}")
-            else:
-                print("Audio file was not saved properly")
-        print(chat)
-        created = chat.timestamp
-        room.last_msg = encrypt_message(msg)
-        room.updated = datetime.now()
-        room.save()
-        room_data = {
-            'id': room.id,
-            'first_person': room.first_person.id,
-            'first_name': room.first_person.first_name,
-            'first_image': room.first_person.image.url if room.first_person.image else None,
-            'second_person': room.second_person.id,
-            'second_name': room.second_person.first_name,
-            'second_image': room.second_person.image.url if room.second_person.image else None,
-            'last_msg': decrypt_message(room.last_msg) if room.last_msg else '',
-            'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S'),
-            'active': recieved.is_active,
-            'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
-            'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S')
-        }
-        return recieved.id, created, room_data, chat.audio
+        try:
+            room = Room.objects.get(id=roomId)
+            recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
+            
+            # Create chat message
+            chat = ChatMessage.objects.create(
+                sended_by=self.user,
+                sended_to=recieved,
+                room=room,
+                message=encrypt_message(msg) if msg else ''
+            )
+
+            # Handle audio file
+            if audio:
+                try:
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    # Changed extension to .m4a to match frontend recording format
+                    filename = f'audio_{self.user.username}_{timestamp}.m4a'
+                    decoded_audio = asyncio.run(self.decode_data(audio))
+                    
+                    # Save audio file
+                    chat.audio.save(filename, ContentFile(decoded_audio), save=True)
+                    
+                    # Verify file was saved
+                    if chat.audio and os.path.exists(chat.audio.path):
+                        print(f"Audio saved successfully at: {chat.audio.path}")
+                    else:
+                        raise Exception("Audio file was not saved properly")
+                        
+                except Exception as e:
+                    print(f"Error saving audio: {str(e)}")
+                    # Don't raise here, allow message to be saved even if audio fails
+            
+            # Update room
+            created = chat.timestamp
+            room.last_msg = encrypt_message(msg) if msg else encrypt_message('Voice Message')
+            room.updated = datetime.now()
+            room.save()
+
+            # Prepare room data
+            room_data = {
+                'id': room.id,
+                'first_person': room.first_person.id,
+                'first_name': room.first_person.first_name,
+                'first_image': room.first_person.image.url if room.first_person.image else None,
+                'second_person': room.second_person.id,
+                'second_name': room.second_person.first_name,
+                'second_image': room.second_person.image.url if room.second_person.image else None,
+                'last_msg': decrypt_message(room.last_msg) if room.last_msg else '',
+                'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S'),
+                'active': recieved.is_active,
+                'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None
+            }
+            
+            return recieved.id, created, room_data, chat.audio
+
+        except Exception as e:
+            print(f"Error in save_message: {str(e)}")
+            raise
 
 class RoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
