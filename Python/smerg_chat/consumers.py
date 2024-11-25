@@ -86,12 +86,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
         chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg))
         if audio:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f'audio_{self.user.username}_{timestamp}.txt'
-            try:
-                decoded_audio = base64.b64decode(audio)
-            except Exception as e:
-                print(f"Base64 decoding error: {e}")
-                raise ValueError("Invalid audio data")
+            filename = f'audio_{self.user.username}_{timestamp}.m4a'
+            
+            directory = 'uploads/chat/records'
+            os.makedirs(directory, exist_ok=True)
+            
+            # Create empty file first
+            file_path = os.path.join(directory, filename)
+            with open(file_path, 'wb') as f:
+                pass
+
+            decoded_audio = base64.b64decode(audio)
             audio_file = ContentFile(audio, name=filename)
             chat.audio.save(filename, audio_file, save=True)
         chat.save()
