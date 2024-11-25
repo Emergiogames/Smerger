@@ -16,9 +16,7 @@ from datetime import datetime
 from django.utils import timezone
 from channels.layers import get_channel_layer
 from django.core.files.base import ContentFile, File
-from django.core.files.storage import FileSystemStorage
 from smerg_app.utils.check_utils import *
-from django.conf import settings
 
 class ChatConsumer(AsyncWebsocketConsumer):
     # Connecting WS
@@ -38,6 +36,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         print('Received', text_data)
         data = json.loads(text_data)
+        audio = None
+        file_name = None
         recieved, created, room_data, audio = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), data.get('audio'))
         response = {
             'message': data.get('message'),
@@ -90,29 +90,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if audio:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f'audio_{self.user.username}_{timestamp}.m4a'
-            fs = FileSystemStorage(location=settings.MEDIA_ROOT)
-
-            audio_bytes = base64.b64decode(audio)
-            # Save the file to the disk using FileSystemStorage
-            file = File(ContentFile(audio_bytes), name=filename)
-            
-            # Save the file and get the filename
-            filename = fs.save(f'chat/records/{filename}', file)  # save under 'audio_files' subdirectory
-
-            # Get the URL for the file
-            file_url = fs.url(filename)  # URL to access the file
-
-            # Attach the saved file to the model (you can store `file_url` or filename in the model)
-            chat.audio = file
-
-            # Decode the Base64 encoded audio data
-
-            # # Use ContentFile to wrap the decoded bytes
-            # audio_file = ContentFile(audio_bytes)
-
-            # # Save the file to the model
-            # chat.audio.save(filename, audio_file)
-            chat.save()
+            decoded_audio = asyncio.run(self.decode_data(audio))
+            # audio_file = ContentFile(decoded_audio)
+            audio_file = io.BytesIO(decoded_audio)
+            chat.audio.save(filename, File(audio_file), save=True)
         print(chat)
         created = chat.timestamp
         room.last_msg = encrypt_message(msg)
