@@ -18,6 +18,7 @@ from channels.layers import get_channel_layer
 from django.core.files.base import ContentFile, File
 from django.core.files.storage import FileSystemStorage
 from smerg_app.utils.check_utils import *
+from django.conf import settings
 
 class ChatConsumer(AsyncWebsocketConsumer):
     # Connecting WS
@@ -96,7 +97,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             file = File(ContentFile(audio_bytes), name=filename)
             
             # Save the file and get the filename
-            filename = fs.save(f'audio_files/{filename}', file)  # save under 'audio_files' subdirectory
+            filename = fs.save(f'chat/records/{filename}', file)  # save under 'audio_files' subdirectory
 
             # Get the URL for the file
             file_url = fs.url(filename)  # URL to access the file
