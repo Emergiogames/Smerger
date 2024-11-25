@@ -93,7 +93,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             try:
                 # Create the ContentFile
-                audio_file = ContentFile(audio_data, name=filename)
+                audio_file = ContentFile(audio, name=filename)
                 
                 # Save the audio file
                 chat.audio.save(filename, audio_file, save=False)
