@@ -91,8 +91,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f'audio_{self.user.username}_{timestamp}.wav'
             decoded_audio = asyncio.run(self.decode_data(audio))
-            chat.audio.save(filename, ContentFile(audio))
-        chat.save()
+            chat.audio.save(filename, ContentFile(decoded_audio), save=True)
         print(chat)
         created = chat.timestamp
         room.last_msg = encrypt_message(msg)
