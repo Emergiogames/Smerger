@@ -88,17 +88,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f'audio_{self.user.username}_{timestamp}.txt'
             decoded_audio = base64.b64decode(audio)
-            # upload_dir = Path('uploads')
-            # upload_dir.mkdir(parents=True, exist_ok=True)
-            
-            # # Generate file path
-            # file_path = upload_dir / filename
-            
-            # # Save the base64 string directly to a file
-            # with open(file_path, 'w') as f:
-            #     f.write(audio)
-            # # audio_file = ContentFile(audio, name=filename)
-            chat.audio.save(filename, audio, save=True)
+            chat.audio.save(filename, decoded_audio, save=True)
         chat.save()
         print(chat)
         created = chat.timestamp
