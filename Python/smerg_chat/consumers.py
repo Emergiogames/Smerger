@@ -92,6 +92,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             filename = f'audio_{self.user.username}_{timestamp}.wav'
             decoded_audio = asyncio.run(self.decode_data(audio))
             chat.audio.save(filename, ContentFile(decoded_audio), save=True)
+            if chat.audio and os.path.exists(chat.audio.path):
+                print(f"Audio saved successfully at: {chat.audio.path}")
+            else:
+                print("Audio file was not saved properly")
         print(chat)
         created = chat.timestamp
         room.last_msg = encrypt_message(msg)
