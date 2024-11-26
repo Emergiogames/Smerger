@@ -89,6 +89,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             audio_file = ContentFile(decoded_audio, name=filename)
             chat.audio.save(filename, audio_file, save=True)
             chat.duration = duration
+            chat.message = "Voice message.."
         chat.save()
         print(chat)
         created = chat.timestamp
@@ -130,15 +131,6 @@ class RoomConsumer(AsyncWebsocketConsumer):
         total_hr_spend = timezone.now() - self.user.active_from
         self.user.total_hr_spend += round(total_hr_spend.total_seconds() / 3600, 2)
         await self.user.asave()
-        # await self.channel_layer.group_send(
-        #     self.room_group_name,
-        #     {
-        #         'type': 'room_message',
-        #         'room_data': {
-        #             'active': self.user.is_active,
-        #             'last_seen': self.user.inactive_from.strftime('%Y-%m-%d %H:%M:%S'),
-        #         }
-        #     })
         await self.channel_layer.group_discard(self.room_group_name,self.channel_name)
 
     async def room_message(self, event):
