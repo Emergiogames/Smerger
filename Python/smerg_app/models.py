@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import *
 import random, string
 from django.utils import timezone
+from custom_storages import MediaStorage
 
 class CustomUserManager(UserManager):
     def create_user(self, username, email=None, password=None, **extra_fields):
@@ -192,7 +193,7 @@ class ActivityLog(models.Model):
 
 # Event/ Offer Banners
 class Banner(models.Model):
-    img = models.FileField(upload_to='banners/images')
+    img = models.FileField(storage=MediaStorage(), upload_to='banners/images')
     type = models.CharField(max_length=100, choices=[('business', 'Business'), ('advisor', 'Advisor'), ('franchise', 'Franchise'), ('investor', 'Investor'),('all','All')])
     created_date = models.DateTimeField(auto_now_add=True)
     validity_date = models.DateField()
