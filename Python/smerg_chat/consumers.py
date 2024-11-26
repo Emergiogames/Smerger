@@ -37,8 +37,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         print('Received', text_data)
         data = json.loads(text_data)
-        audio = None
-        file_name = None
         recieved, created, room_data, audio = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), data.get('audio'))
         response = {
             'message': data.get('message'),
@@ -46,6 +44,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'roomId': data.get('roomId'),
             'token': data.get('token'),
             'sendedTo': recieved,
+            'duration': data.get('duration'),
             'sendedBy': self.user.id,
             'time': str(created)
         }
@@ -88,17 +87,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f'audio_{self.user.username}_{timestamp}.txt'
             decoded_audio = base64.b64decode(audio)
-            
-            directory = os.path.join(settings.MEDIA_ROOT, 'chat', 'records')
-            print(directory)
-            os.makedirs(directory, exist_ok=True)
-            
-            # Create empty file first
-            file_path = os.path.join(directory, filename)
-            print(file_path)
-            with open(file_path, 'w') as f:
-                f.write(audio)
-
             audio_file = ContentFile(audio, name=filename)
             chat.audio.save(filename, audio_file, save=True)
         chat.save()
