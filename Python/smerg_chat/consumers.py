@@ -85,10 +85,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg))
         if audio:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f'audio_{self.user.username}_{timestamp}.M4A'
+            filename = f'audio_{self.user.username}_{timestamp}.m4a'
             decoded_audio = base64.b64decode(audio)
-            read_audio = decoded_audio.read()
-            audio_file = ContentFile(read_audio, name=filename)
+            audio_file = ContentFile(decoded_audio, name=filename)
             chat.audio.save(filename, audio_file, save=True)
         chat.save()
         print(chat)
