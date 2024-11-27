@@ -4,8 +4,6 @@ import random, string
 from django.utils import timezone
 from custom_storages import MediaStorage
 
-## storage=MediaStorage(),
-
 class CustomUserManager(UserManager):
     def create_user(self, username, email=None, password=None, **extra_fields):
         if not username:
@@ -31,7 +29,7 @@ class CustomUserManager(UserManager):
         return ''.join(random.choice(allowed_chars) for _ in range(length))
 
 class UserProfile(AbstractUser):
-    image = models.FileField(upload_to='profile/images', null=True, blank=True)
+    image = models.FileField(storage=MediaStorage(),upload_to='profile/images', null=True, blank=True)
     onesignal_id = models.CharField(max_length=100, null=True, blank=True)
     block = models.BooleanField(default=False)
     total_hr_spend = models.FloatField(default=0.0)
@@ -49,7 +47,7 @@ class Profile(models.Model):
     web_url = models.CharField(max_length=200, blank=True, null=True)
     state = models.CharField(max_length=100)
     city = models.CharField(max_length=100)
-    image = models.ImageField(upload_to='profile_images/', blank=True, null=True)
+    image = models.ImageField(storage=MediaStorage(),upload_to='profile_images/', blank=True, null=True)
     experiance = models.CharField(max_length=500, blank=True, null=True)
     interest = models.CharField(max_length=500, blank=True, null=True)
     about = models.TextField()
@@ -123,19 +121,19 @@ class SaleProfiles(models.Model):
     staff = models.IntegerField(null=True, blank=True)
 
     # Common file fields
-    logo = models.FileField( upload_to='combined/images', null=True, blank=True)
-    image1 = models.FileField( upload_to='combined/images', null=True, blank=True)
-    image2 = models.FileField( upload_to='combined/images', null=True, blank=True)
-    image3 = models.FileField( upload_to='combined/images', null=True, blank=True)
-    image4 = models.FileField( upload_to='combined/images', null=True, blank=True)
-    doc1 = models.FileField( upload_to='combined/docs', null=True, blank=True)
-    doc2 = models.FileField( upload_to='combined/docs', null=True, blank=True)
-    doc3 = models.FileField( upload_to='combined/docs', null=True, blank=True)
-    doc4 = models.FileField( upload_to='combined/docs', null=True, blank=True)
-    proof1 = models.FileField( upload_to='combined/proof', null=True, blank=True)
-    proof2 = models.FileField( upload_to='combined/proof', null=True, blank=True)
-    proof3 = models.FileField( upload_to='combined/proof', null=True, blank=True)
-    proof4 = models.FileField( upload_to='combined/proof', null=True, blank=True)
+    logo = models.FileField(storage=MediaStorage(), upload_to='combined/images', null=True, blank=True)
+    image1 = models.FileField(storage=MediaStorage(), upload_to='combined/images', null=True, blank=True)
+    image2 = models.FileField(storage=MediaStorage(), upload_to='combined/images', null=True, blank=True)
+    image3 = models.FileField(storage=MediaStorage(), upload_to='combined/images', null=True, blank=True)
+    image4 = models.FileField(storage=MediaStorage(), upload_to='combined/images', null=True, blank=True)
+    doc1 = models.FileField(storage=MediaStorage(), upload_to='combined/docs', null=True, blank=True)
+    doc2 = models.FileField(storage=MediaStorage(), upload_to='combined/docs', null=True, blank=True)
+    doc3 = models.FileField(storage=MediaStorage(), upload_to='combined/docs', null=True, blank=True)
+    doc4 = models.FileField(storage=MediaStorage(), upload_to='combined/docs', null=True, blank=True)
+    proof1 = models.FileField(storage=MediaStorage(), upload_to='combined/proof', null=True, blank=True)
+    proof2 = models.FileField(storage=MediaStorage(), upload_to='combined/proof', null=True, blank=True)
+    proof3 = models.FileField(storage=MediaStorage(), upload_to='combined/proof', null=True, blank=True)
+    proof4 = models.FileField(storage=MediaStorage(), upload_to='combined/proof', null=True, blank=True)
     block = models.BooleanField(default=False)
     verified = models.BooleanField(default=False)
 
@@ -187,7 +185,7 @@ class ActivityLog(models.Model):
     title = models.CharField(max_length=500)
     description = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
-    img = models.FileField(upload_to='combined/images',null=True, blank=True)
+    img = models.FileField(storage=MediaStorage(),upload_to='combined/images',null=True, blank=True)
     rate = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
@@ -195,7 +193,7 @@ class ActivityLog(models.Model):
 
 # Event/ Offer Banners
 class Banner(models.Model):
-    img = models.FileField( upload_to='banners/images')
+    img = models.FileField(storage=MediaStorage(), upload_to='banners/images')
     type = models.CharField(max_length=100, choices=[('business', 'Business'), ('advisor', 'Advisor'), ('franchise', 'Franchise'), ('investor', 'Investor'),('all','All')])
     created_date = models.DateTimeField(auto_now_add=True)
     validity_date = models.DateField()
@@ -269,7 +267,7 @@ class Notification(models.Model):
     user = models.ManyToManyField(UserProfile, related_name='notifications')
     title =  models.CharField(max_length=100)
     description = models.TextField()    
-    image = models.FileField(upload_to='notification/image',null=True,blank=True)
+    image = models.FileField(storage=MediaStorage(),upload_to='notification/image',null=True,blank=True)
     url = models.URLField(max_length=200,null=True,blank=True)
     created_on = models.DateField(auto_now=True)
 
