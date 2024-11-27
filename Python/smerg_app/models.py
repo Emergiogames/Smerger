@@ -307,3 +307,18 @@ class Report(models.Model):
         self.sale_profile_id = kwargs.pop('sale_profile_id', None)
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+
+class UserSession(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    login_time = models.DateTimeField()
+    logout_time = models.DateTimeField(null=True, blank=True)
+    session_duration = models.IntegerField(null=True, blank=True)  # Store duration in seconds
+
+    def save(self, *args, **kwargs):
+        # Calculate session duration when logout_time is set
+        if self.logout_time:
+            self.session_duration = int((self.logout_time - self.login_time).total_seconds())
+        super().save(*args, **kwargs)
+        
+    def __str__(self):
+        return f"{self.user} - {self.session_duration}s"
