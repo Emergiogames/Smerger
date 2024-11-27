@@ -84,6 +84,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
         chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg))
         room.last_msg = encrypt_message(msg)
+        
         if audio:
             filename = f'audio_{self.user.username}_{time}.m4a'
             decoded_audio = base64.b64decode(audio)
