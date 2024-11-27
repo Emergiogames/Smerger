@@ -1,4 +1,4 @@
-import json, os, asyncio
+import json, os, asyncio, base64
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smerger.settings")
 
 import django
@@ -15,7 +15,9 @@ from .utils.noti_utils import *
 from datetime import datetime
 from django.utils import timezone
 from channels.layers import get_channel_layer
+from django.core.files.base import ContentFile, File
 from smerg_app.utils.check_utils import *
+from django.conf import settings
 
 class ChatConsumer(AsyncWebsocketConsumer):
     # Connecting WS
@@ -35,13 +37,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         print('Received', text_data)
         data = json.loads(text_data)
-        recieved, created, room_data = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), data.get('audio'))
+        recieved, created, room_data, audio = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), data.get('audio'), datetime.now().strftime('%Y%m%d_%H%M%S'), data.get('duration'))
         response = {
             'message': data.get('message'),
-            'audio': data.get('audio'),
+            'audio': audio.url if audio else None,
             'roomId': data.get('roomId'),
             'token': data.get('token'),
             'sendedTo': recieved,
+            'duration': data.get('duration'),
             'sendedBy': self.user.id,
             'time': str(created)
         }
@@ -76,13 +79,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     # Saving Message to Db
     @sync_to_async
-    def save_message(self, roomId, token, msg, audio):
+    def save_message(self, roomId, token, msg, audio, time, duration):
         room = Room.objects.get(id=roomId)
         recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
-        chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg), audio=audio)
+        chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg))
+        room.last_msg = encrypt_message(msg)
+        # if audio:
+        #     filename = f'audio_{self.user.username}_{time}.m4a'
+        #     decoded_audio = base64.b64decode(audio)
+        #     audio_file = ContentFile(decoded_audio, name=filename)
+        #     chat.audio.save(filename, audio_file, save=True)
+        #     chat.duration = duration
+        #     room.last_msg = encrypt_message("Voice message")
+        chat.save()
         print(chat)
         created = chat.timestamp
-        room.last_msg = encrypt_message(msg)
         room.updated = datetime.now()
         room.save()
         room_data = {
@@ -96,10 +107,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'last_msg': decrypt_message(room.last_msg) if room.last_msg else '',
             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S'),
             'active': recieved.is_active,
-            'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S'),
+            'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S')
         }
-        return recieved.id, created, room_data
+        return recieved.id, created, room_data, chat.audio
 
 class RoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
