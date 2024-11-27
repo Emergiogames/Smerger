@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from .models import *
 from .serializers import *
-from rest_framework.views import APIView
+# from rest_framework.views import APIView
+from adrf.views import APIView
 from rest_framework.response import Response
 from django.db.models import Q
 from .utils.enc_utils import *
@@ -51,8 +52,13 @@ class Chat(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                chats = [chat async for chat in ChatMessage.objects.filter(Q(first_person=user) | Q(second_person=user)).order_by('-id')] 
+                chats = [chat async for chat in ChatMessage.objects.filter(room__id = request.GET.get('roomId')).order_by('-id')] 
                 serialized_data = await serialize_data(chats, ChatSerial)
-                return Response(serialized_data)
+                room   = await Room.objects.select_related('first_person', 'second_person').aget(id = request.GET.get('roomId'))
+                if user.id == room.first_person.id:
+                    number = room.second_person.username
+                else:
+                    number = room.first_person.username
+                return Response({'messages': serialized_data, 'number': number })
             return Response({'status':False,'message': 'User doesnot exist'})
         return Response({'status':False,'message': 'Token is not passed'})
