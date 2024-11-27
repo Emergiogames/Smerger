@@ -864,7 +864,6 @@ class Subscribe(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                # subscribed, value = await check_subscription(user, request.data.get('type'))
                 if await Subscription.objects.filter(user=user, plan__type=request.GET.get('type')).aexists():
                     subscription = await Subscription.objects.aget(user=user, plan__type=request.GET.get('type'))
                     remaining_posts = await sync_to_async(lambda: subscription.remaining_posts)()
