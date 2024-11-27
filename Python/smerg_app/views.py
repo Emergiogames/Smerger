@@ -210,7 +210,7 @@ class Profiles(APIView):
                 profile_exist = await Profile.objects.filter(user=user, type=request.data.get('type')).aexists()
                 subscription = await Subscription.objects.filter(user=user, plan__type=request.data.get('type')).aexists()
                 if not profile_exist and subscription:
-                    data = request.data.copy()
+                    data = request.data
                     data['user'] = user.id 
                     saved, resp = await create_serial(ProfileSerial, data)
                     if saved:
@@ -350,7 +350,7 @@ class InvestorList(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                data = request.data.copy()
+                data = request.data
                 # request.data['user'] = user.id
                 # request.data['entity_type'] = 'investor'
                 data['user'] = user.id
@@ -425,7 +425,7 @@ class FranchiseList(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                data = request.data.copy()
+                data = request.data
                 data['user'] = user.id
                 data['entity_type'] = 'franchise'
                 # request.data['user'] = user.id
@@ -499,7 +499,7 @@ class UserView(APIView):
                 already_exists = await UserProfile.objects.filter(Q(username=request.data.get('phone'))|Q(email=request.data.get('email'))& ~Q(id=user.id)).aexists() 
                 if already_exists:
                     return Response({'status':False,'message': 'User with same details already exists'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-                # mutable_data = request.data.copy()
+                # mutable_data = request.data
                 saved, resp = await update_serial(UserSerial, request.data, user)
                 if saved:
                     return Response({'status':True,'message': 'User updated successfully'}, status=status.HTTP_201_CREATED)
@@ -586,7 +586,7 @@ class Wishlists(APIView):
             if exists:
                 # request.data['user'] = user.id
                 # request.data['product'] = request.data.get('productId')
-                data = request.data.copy()
+                data = request.data
                 data['user'] = user.id
                 data['product'] = request.data.get('productId')
                 product = await SaleProfiles.objects.aget(id=request.data.get('productId'))
@@ -640,7 +640,7 @@ class RecentActs(APIView):
                     return Response({'status':False,'message': 'Advisor cant add'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
                 # request.data['user'] = user.id
                 # request.data['product'] = request.data.get('productId')
-                data = request.data.copy()
+                data = request.data
                 data['user'] = user.id
                 data['product'] = request.data.get('productId')
 
@@ -667,7 +667,7 @@ class Suggests(APIView):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
                 # request.data['user'] = user.id
-                data = request.data.copy()
+                data = request.data
                 data['user'] = user.id
                 saved, resp = await create_serial(SuggestSerial, data)
                 if saved:
@@ -699,7 +699,7 @@ class Testimonials(APIView):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
                 # request.data['user'] = user.id
-                data = request.data.copy()
+                data = request.data
                 data['user'] = user.id
                 saved, resp = await create_serial(TestSerial, data)
                 if saved:
@@ -761,7 +761,7 @@ class Prefer(APIView):
                 if already_exists:
                     return Response({'status':True,'message': 'Preference already exist'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
                 # request.data['user'] = user.id
-                data = request.data.copy()
+                data = request.data
                 data['user'] = user.id
                 saved, resp = await create_serial(PrefSerial, data)
                 if saved:
@@ -893,7 +893,7 @@ class Subscribe(APIView):
                         # request.data['expiry_date'] = (timezone.now() + relativedelta(months=plan.time_period)).strftime('%Y-%m-%d')
                         # request.data['remaining_posts'] = plan.post_number
                         # request.data['plan'] = plan.id
-                        data = request.data.copy()
+                        data = request.data
                         data['user'] = user.id
                         data['expiry_date'] = (timezone.now() + relativedelta(months=plan.time_period)).strftime('%Y-%m-%d')
                         data['remaining_posts'] = plan.post_number
