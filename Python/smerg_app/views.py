@@ -275,7 +275,7 @@ class BusinessList(APIView):
             if exists:
                 # request.data['user'] = user.id
                 # request.data['entity_type'] = 'business'
-                data = request.data.copy()
+                data = request.data
                 data['user'] = user.id
                 data['entity_type'] = 'business'
                 subscribed = await check_subscription(user, "business")
