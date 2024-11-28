@@ -38,7 +38,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         print('Received', text_data)
         data = json.loads(text_data)
-        recieved, created, room_data, audio, attachment = await self.save_message(
+        recieved, created, room_data, chat = await self.save_message(
             data.get('roomId'),
             data.get('token'),
             data.get('message'), 
@@ -49,9 +49,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         response = {
             'message': data.get('message'),
-            'messageType': 'voice' if audio else 'attachment' if attachment else 'text',
-            'audio': audio.url if audio else None,  
-            'attachment': attachment.url if attachment else None,  
+            'messageType': 'voice' if chat.audio else 'attachment' if chat.attachment else 'text',
+            'audio': chat.audio.url if chat.audio else None,  
+            'attachment': chat.attachment.url if chat.attachment else None,  
+            'size': chat.attachment_size if chat.attachment else None,  
+            'type': chat.attachment_type if chat.attachment else None, 
             'roomId': data.get('roomId'),
             'token': data.get('token'),
             'sendedTo': recieved,
@@ -131,7 +133,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S')
         }
-        return recieved.id, chat.timestamp, room_data, chat.audio, chat.attachment
+        return recieved.id, chat.timestamp, room_data, chat
 
 class RoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
