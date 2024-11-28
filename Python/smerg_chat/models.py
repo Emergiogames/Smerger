@@ -16,7 +16,7 @@ class ChatMessage(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     sended_by = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='sended')
     sended_to = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='recieved')
-    message = models.TextField(null=True, blank=True, db_collation='utf8_unicode_ci')
+    message = models.TextField(null=True, blank=True, db_collation='utf8mb4_unicode_ci')
     audio = models.FileField(storage=MediaStorage(), upload_to="chat/records/", null=True, blank=True)
     duration = models.CharField(max_length=100, default='', null=True, blank=True)
     attachment = models.FileField(storage=MediaStorage(), upload_to="chat/attachments/", null=True, blank=True)
