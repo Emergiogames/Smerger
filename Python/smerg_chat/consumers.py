@@ -1,4 +1,4 @@
-import json, os, asyncio, base64, uuid, imghdr
+import json, os, asyncio, base64, uuid
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smerger.settings")
 
 import django
@@ -18,6 +18,7 @@ from channels.layers import get_channel_layer
 from django.core.files.base import ContentFile, File
 from smerg_app.utils.check_utils import *
 from django.conf import settings
+from PIL import Image
 
 class ChatConsumer(AsyncWebsocketConsumer):
     # Connecting WS
@@ -103,7 +104,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             room.last_msg = encrypt_message("Voice message")
         if attachment:
             decoded_attachment = base64.b64decode(attachment)
-            image_type = imghdr.what(None, h=decoded_attachment)
+            with Image.open(BytesIO(decoded_attachment)) as img:
+                image_type = img.format
             filename = f'attachment_{self.user.username}_{time}.{image_type}'
             attachment_file = ContentFile(decoded_attachment, name=filename)
             chat.attachment.save(filename, attachment_file, save=True)
