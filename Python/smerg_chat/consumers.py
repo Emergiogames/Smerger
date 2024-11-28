@@ -38,7 +38,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         print('Received', text_data)
         data = json.loads(text_data)
-        recieved, created, room_data,   = await self.save_message(
+        recieved, created, room_data, chat  = await self.save_message(
             data.get('roomId'),
             data.get('token'),
             data.get('message'), 
