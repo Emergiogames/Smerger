@@ -38,7 +38,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         print('Received', text_data)
         data = json.loads(text_data)
-        recieved, created, room_data, chat  = await self.save_message(
+        recieved, created, room_data, chat = await self.save_message(
             data.get('roomId'),
             data.get('token'),
             data.get('message'), 
@@ -56,7 +56,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'token': data.get('token'),
             'sendedTo': recieved,
             'duration': data.get('duration') if data.get('duration') else None,
-            'sendedBy': self.user.id,   
+            'sendedBy': self.user.id,
             'time': str(created)
         }
 
@@ -94,20 +94,26 @@ class ChatConsumer(AsyncWebsocketConsumer):
         room = Room.objects.get(id=roomId)
         recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
         chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg))
-        type = "text"
         room.last_msg = encrypt_message(msg)
         if audio:
-            type = "audio"
             filename = f'audio_{self.user.username}_{time}.m4a'
-            self.save_message(audio, filename, chat, type, duration)
-            room.last_msg = encrypt_message("🎙️ Voice message")
+            decoded_audio = base64.b64decode(audio)
+            audio_file = ContentFile(decoded_audio, name=filename)
+            chat.audio.save(filename, audio_file, save=True)
+            chat.duration = duration
+            room.last_msg = encrypt_message("Voice message")
         if attachment:
-            type = "attachment"
             attachment_dict = json.loads(attachment)
-            file_type = attachment_dict['fileExtension']
-            filename = f'attachment_{self.user.username}_{time}{file_type}'
-            self.save_message(attachment_dict['data'], filename, chat, type, duration=None, size=attachment_dict['size'], type_=attachment_dict['type'])
-            room.last_msg = encrypt_message("📄 Attachment")
+            base64_data = attachment_dict['data']
+            decoded_attachment = base64.b64decode(base64_data)
+            image_type = attachment_dict['fileExtension']
+            filename = f'attachment_{self.user.username}_{time}{image_type}'
+            attachment_file = ContentFile(decoded_attachment, name=filename)
+            chat.attachment.save(filename, attachment_file, save=True)
+            chat.attachment_size = attachment_dict['size']
+            chat.attachment_type = attachment_dict['type']
+            room.last_msg = encrypt_message("Attachment")
+        chat.save()
         print(chat)
         room.updated = datetime.now()
         room.save()
@@ -126,24 +132,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S')
         }
         return recieved.id, chat.timestamp, room_data, chat
-
-    def file_save(self, file, filename, chat, type, duration, size, type_):
-        print("Working!!!.....")
-        decoded_file = self.decode_data(file)
-        file_ = ContentFile(decoded_file, name=filename)
-        if type == "audio":
-            chat.audio.save(filename, file_, save=True)
-            chat.duration = duration
-        elif type == "attachment":
-            chat.attachment.save(filename, attachment_file, save=True)
-            chat.attachment_size = size
-            chat.attachment_type = type_
-        chat.save()
-
-    # Decode data
-    def decode_data(self, data):
-        print("Working decode!!!.....")
-        return base64.b64decode(data)
 
 class RoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
