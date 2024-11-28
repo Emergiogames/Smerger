@@ -90,9 +90,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     # Decode data
     async def decode_data(self, data):
-       return base64.b64decode(data)
+        print("Working decode!!!.....")
+        return base64.b64decode(data)
 
     async def file_save(self, file, filename, chat, type, duration, size, type_):
+        print("Working!!!.....")
         decoded_file = self.decode_data(file)
         file_ = ContentFile(decoded_file, name=filename)
         if type == "audio":
