@@ -107,11 +107,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
             base64_data = attachment_dict['data']
             decoded_attachment = base64.b64decode(base64_data)
             image_type = attachment_dict['fileExtension']
-            # with Image.open(BytesIO(decoded_attachment)) as img:
-            #     image_type = img.format
             filename = f'attachment_{self.user.username}_{time}{image_type}'
             attachment_file = ContentFile(decoded_attachment, name=filename)
             chat.attachment.save(filename, attachment_file, save=True)
+            chat.attachment_size = attachment_dict['size']
+            chat.attachment_type = attachment_dict['type']
             room.last_msg = encrypt_message("Attachment")
         chat.save()
         print(chat)

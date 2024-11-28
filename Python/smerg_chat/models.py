@@ -20,6 +20,8 @@ class ChatMessage(models.Model):
     audio = models.FileField(storage=MediaStorage(), upload_to="chat/records/", null=True, blank=True)
     duration = models.CharField(max_length=100, default='', null=True, blank=True)
     attachment = models.FileField(storage=MediaStorage(), upload_to="chat/attachments/", null=True, blank=True)
+    attachment_size = models.CharField(default='', max_length=50)
+    attachment_type = models.CharField(default='', max_length=50)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
