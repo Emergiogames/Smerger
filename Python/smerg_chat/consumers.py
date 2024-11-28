@@ -93,7 +93,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         print("Working decode!!!.....")
         return base64.b64decode(data)
 
-    async def file_save(self, file, filename, chat, type, duration, size, type_):
+    def file_save(self, file, filename, chat, type, duration, size, type_):
         print("Working!!!.....")
         decoded_file = self.decode_data(file)
         file_ = ContentFile(decoded_file, name=filename)
@@ -117,14 +117,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if audio:
             type = "audio"
             filename = f'audio_{self.user.username}_{time}.m4a'
-            await self.save_message(audio, filename, chat, type, duration)
+            self.save_message(audio, filename, chat, type, duration)
             room.last_msg = encrypt_message("🎙️ Voice message")
         if attachment:
             type = "attachment"
             attachment_dict = json.loads(attachment)
             file_type = attachment_dict['fileExtension']
             filename = f'attachment_{self.user.username}_{time}{file_type}'
-            await self.save_message(attachment_dict['data'], filename, chat, type, duration=None, size=attachment_dict['size'], type_=attachment_dict['type'])
+            self.save_message(attachment_dict['data'], filename, chat, type, duration=None, size=attachment_dict['size'], type_=attachment_dict['type'])
             room.last_msg = encrypt_message("📄 Attachment")
         print(chat)
         room.updated = datetime.now()
