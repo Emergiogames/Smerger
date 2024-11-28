@@ -92,39 +92,39 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def decode_data(self, data):
        return base64.b64decode(data)
 
-    async def file_save(self, file, filename, type, duration, size, type_):
+    async def file_save(self, file, filename, chat, type, duration, size, type_):
         decoded_file = self.decode_data(file)
         file_ = ContentFile(decoded_file, name=filename)
         if type == "audio":
-            self.chat.audio.save(filename, file_, save=True)
-            self.chat.duration = duration
+            chat.audio.save(filename, file_, save=True)
+            chat.duration = duration
         elif type == "attachment":
-            self.chat.attachment.save(filename, attachment_file, save=True)
-            self.chat.attachment_size = size
-            self.chat.attachment_type = type_
-        self.chat.save()
+            chat.attachment.save(filename, attachment_file, save=True)
+            chat.attachment_size = size
+            chat.attachment_type = type_
+        chat.save()
 
     # Saving Message to Db
     @sync_to_async
     def save_message(self, roomId, token, msg, audio, time, duration, attachment):
         room = Room.objects.get(id=roomId)
         recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
-        self.chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg))
+        chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg))
         type = "text"
         room.last_msg = encrypt_message(msg)
         if audio:
             type = "audio"
             filename = f'audio_{self.user.username}_{time}.m4a'
-            self.save_message(audio, filename, type, duration)
+            self.save_message(audio, filename, chat, type, duration)
             room.last_msg = encrypt_message("🎙️ Voice message")
         if attachment:
             type = "attachment"
             attachment_dict = json.loads(attachment)
             file_type = attachment_dict['fileExtension']
             filename = f'attachment_{self.user.username}_{time}{file_type}'
-            self.save_message(attachment_dict['data'], filename, type, duration=None, size=attachment_dict['size'], type_=attachment_dict['type'])
+            self.save_message(attachment_dict['data'], filename, chat, type, duration=None, size=attachment_dict['size'], type_=attachment_dict['type'])
             room.last_msg = encrypt_message("📄 Attachment")
-        print(self.chat)
+        print(chat)
         room.updated = datetime.now()
         room.save()
         room_data = {
@@ -141,7 +141,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S')
         }
-        return recieved.id, self.chat.timestamp, room_data, self.chat
+        return recieved.id, chat.timestamp, room_data, chat
 
 class RoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
