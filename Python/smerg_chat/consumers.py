@@ -38,7 +38,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         print('Received', text_data)
         data = json.loads(text_data)
-        recieved, room_data = await self.save_message(
+        recieved, created, room_data,   = await self.save_message(
             data.get('roomId'),
             data.get('token'),
             data.get('message'), 
@@ -49,15 +49,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         response = {
             'message': data.get('message'),
-            'messageType': 'voice' if self.chat.audio else 'attachment' if self.chat.attachment else 'text',
-            'audio': self.chat.audio.url if self.chat.audio else None,  
-            'attachment': {'url' : self.chat.attachment.url if self.chat.attachment else None,'size': self.chat.attachment_size if self.chat.attachment else None,  'type': self.chat.attachment_type if self.chat.attachment else None, },  
+            'messageType': 'voice' if chat.audio else 'attachment' if chat.attachment else 'text',
+            'audio': chat.audio.url if chat.audio else None,  
+            'attachment': {'url' : chat.attachment.url if chat.attachment else None,'size': chat.attachment_size if chat.attachment else None,  'type': chat.attachment_type if chat.attachment else None, },  
             'roomId': data.get('roomId'),
             'token': data.get('token'),
             'sendedTo': recieved,
             'duration': data.get('duration') if data.get('duration') else None,
             'sendedBy': self.user.id,   
-            'time': str(self.chat.timestamp)
+            'time': str(created)
         }
 
         ## Send Message
@@ -141,7 +141,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S')
         }
-        return recieved.id, room_data
+        return recieved.id, self.chat.timestamp, room_data, self.chat
 
 class RoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
