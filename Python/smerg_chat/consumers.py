@@ -106,8 +106,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             attachment_dict = json.loads(attachment)
             base64_data = attachment_dict['data']
             decoded_attachment = base64.b64decode(base64_data)
-            with Image.open(BytesIO(decoded_attachment)) as img:
-                image_type = img.format
+            image_type = attachment_dict['fileExtension']
+            # with Image.open(BytesIO(decoded_attachment)) as img:
+            #     image_type = img.format
             filename = f'attachment_{self.user.username}_{time}.{image_type}'
             attachment_file = ContentFile(decoded_attachment, name=filename)
             chat.attachment.save(filename, attachment_file, save=True)
