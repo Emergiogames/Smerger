@@ -132,7 +132,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }
         return recieved.id, chat.timestamp, room_data, chat
 
-    @sync_to_async
     def file_save(self, file, filename, chat, type, duration, size, type_):
         print("Working!!!.....")
         decoded_file = self.decode_data(file)
