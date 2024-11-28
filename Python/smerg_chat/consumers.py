@@ -89,7 +89,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_discard(self.chatroom, self.channel_name)
 
     # Decode data
-    async def decode_data(self, data):
+    def decode_data(self, data):
         print("Working decode!!!.....")
         return base64.b64decode(data)
 
