@@ -93,20 +93,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         print("Working decode!!!.....")
         return base64.b64decode(data)
 
-    @sync_to_async
-    def file_save(self, file, filename, chat, type, duration, size, type_):
-        print("Working!!!.....")
-        decoded_file = self.decode_data(file)
-        file_ = ContentFile(decoded_file, name=filename)
-        if type == "audio":
-            chat.audio.save(filename, file_, save=True)
-            chat.duration = duration
-        elif type == "attachment":
-            chat.attachment.save(filename, attachment_file, save=True)
-            chat.attachment_size = size
-            chat.attachment_type = type_
-        chat.save()
-
     # Saving Message to Db
     @sync_to_async
     def save_message(self, roomId, token, msg, audio, time, duration, attachment):
@@ -145,6 +131,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S')
         }
         return recieved.id, chat.timestamp, room_data, chat
+
+    @sync_to_async
+    def file_save(self, file, filename, chat, type, duration, size, type_):
+        print("Working!!!.....")
+        decoded_file = self.decode_data(file)
+        file_ = ContentFile(decoded_file, name=filename)
+        if type == "audio":
+            chat.audio.save(filename, file_, save=True)
+            chat.duration = duration
+        elif type == "attachment":
+            chat.attachment.save(filename, attachment_file, save=True)
+            chat.attachment_size = size
+            chat.attachment_type = type_
+        chat.save()
 
 class RoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
