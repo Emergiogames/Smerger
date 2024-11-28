@@ -145,6 +145,9 @@ CACHES = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
+         'OPTIONS': {
+            'charset': 'utf8mb4',
+        },
         'NAME': config('MYSQL_DATABASE'),
         'USER': config('MYSQL_USER'),
         'PASSWORD': config('MYSQL_ROOT_PASSWORD'),
