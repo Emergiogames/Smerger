@@ -122,7 +122,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             attachment_dict = json.loads(attachment)
             file_type = attachment_dict['fileExtension']
             filename = f'attachment_{self.user.username}_{time}{file_type}'
-            self.save_message(attachment_dict['data'], filename, type, duration=None, attachment_dict['size'], attachment_dict['type'])
+            self.save_message(attachment_dict['data'], filename, type, duration=None, size=attachment_dict['size'], type_=attachment_dict['type'])
             room.last_msg = encrypt_message("📄 Attachment")
         print(self.chat)
         room.updated = datetime.now()
