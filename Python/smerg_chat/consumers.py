@@ -1,4 +1,4 @@
-import json, os, asyncio, base64, uuid
+import json, os, asyncio, base64, uuid, imghdr
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smerger.settings")
 
 import django
@@ -43,10 +43,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             data.get('message'), 
             data.get('audio'), 
             datetime.now().strftime('%Y%m%d_%H%M%S'), 
-            data.get('duration'), data.get('attachment')
+            data.get('duration'), 
+            data.get('attachment')
         )
         response = {
             'message': data.get('message'),
+            'messageType': 'voice' if audio else 'attachment' if attachment else 'text',
             'audio': audio.url if audio else None,  
             'attachment': attachment.url if attachment else None,  
             'roomId': data.get('roomId'),
@@ -100,10 +102,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
             chat.duration = duration
             room.last_msg = encrypt_message("Voice message")
         if attachment:
-            # filename = f'audio_{self.user.username}_{time}.m4a'
             decoded_attachment = base64.b64decode(attachment)
-            attachment_file = ContentFile(decoded_attachment, name=f"attachment_{uuid.uuid4()}")
-            chat.attachment.save(attachment_file.name, attachment_file, save=True)
+            image_type = imghdr.what(None, h=decoded_attachment)
+            filename = f'attachment_{self.user.username}_{time}.{image_type}'
+            attachment_file = ContentFile(decoded_attachment, name=filename)
+            chat.attachment.save(filename, attachment_file, save=True)
             room.last_msg = encrypt_message("Attachment")
         chat.save()
         print(chat)
