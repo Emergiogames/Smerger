@@ -69,7 +69,8 @@ def send_noti(sender, instance, created, **kwargs):
     if created:
         room = Room.objects.get(id=instance.room.id)
         recieved = instance.sended_to
-        send_notifications(instance.message, instance.sended_by.first_name, recieved.onesignal_id)
+        if recieved.onesignal_id:
+            send_notifications(instance.message, instance.sended_by.first_name, recieved.onesignal_id)
 
         # channel_layer = get_channel_layer()
         # async_to_sync(channel_layer.group_send)(
