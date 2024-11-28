@@ -88,11 +88,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.chatroom, self.channel_name)
 
-    # Decode data
-    def decode_data(self, data):
-        print("Working decode!!!.....")
-        return base64.b64decode(data)
-
     # Saving Message to Db
     @sync_to_async
     def save_message(self, roomId, token, msg, audio, time, duration, attachment):
@@ -144,6 +139,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
             chat.attachment_size = size
             chat.attachment_type = type_
         chat.save()
+
+    # Decode data
+    def decode_data(self, data):
+        print("Working decode!!!.....")
+        return base64.b64decode(data)
 
 class RoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
