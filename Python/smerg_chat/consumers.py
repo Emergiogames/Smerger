@@ -51,7 +51,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'message': data.get('message'),
             'messageType': 'voice' if self.chat.audio else 'attachment' if self.chat.attachment else 'text',
             'audio': self.chat.audio.url if self.chat.audio else None,  
-            'attachment': {'url' : self.chat.attachment.url if self.chat.attachment else None,'size': self.chat.attachment_size if self.chat.attachment else None,  'type': chat.attachment_type if chat.attachment else None, },  
+            'attachment': {'url' : self.chat.attachment.url if self.chat.attachment else None,'size': self.chat.attachment_size if self.chat.attachment else None,  'type': self.chat.attachment_type if self.chat.attachment else None, },  
             'roomId': data.get('roomId'),
             'token': data.get('token'),
             'sendedTo': recieved,
