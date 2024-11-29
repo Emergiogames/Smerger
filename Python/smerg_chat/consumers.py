@@ -29,9 +29,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
         exists, self.user = await check_user(token)
         self.chatroom = f'user_chatroom_{id}'
-        async for i in ChatMessage.objects.filter(sended_to=self.user, seen=False):
-            i.seen = True
-            await i.asave()
+        await ChatMessage.objects.filter(sended_to=self.user, seen=False).update(seen=True)
+        # async for i in ChatMessage.objects.filter(sended_to=self.user, seen=False):
+        #     i.seen = True
+        #     await i.asave()
         await self.channel_layer.group_add(self.chatroom, self.channel_name)
         await self.accept()
 
