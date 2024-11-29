@@ -18,7 +18,6 @@ from channels.layers import get_channel_layer
 from django.core.files.base import ContentFile, File
 from smerg_app.utils.check_utils import *
 from django.conf import settings
-from PIL import Image
 
 class ChatConsumer(AsyncWebsocketConsumer):
     # Connecting WS
