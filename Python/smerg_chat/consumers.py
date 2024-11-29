@@ -93,7 +93,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def save_message(self, roomId, token, msg, audio, time, duration, attachment):
         room = Room.objects.get(id=roomId)
         recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
-        message = "Audio message" if audio else "Attachment" if attachment else msg
+        message = "🎙️ Voice message" if audio else "📄 Attachment" if attachment else msg
         self.chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(message))
         room.last_msg = encrypt_message(msg)
         if audio:
@@ -102,7 +102,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             audio_file = ContentFile(decoded_audio, name=filename)
             self.chat.audio.save(filename, audio_file, save=True)
             self.chat.duration = duration
-            room.last_msg = encrypt_message("Voice message")
+            room.last_msg = encrypt_message("🎙️ Voice message")
         if attachment:
             attachment_dict = json.loads(attachment)
             base64_data = attachment_dict['data']
@@ -113,7 +113,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.chat.attachment.save(filename, attachment_file, save=True)
             self.chat.attachment_size = attachment_dict['size']
             self.chat.attachment_type = attachment_dict['type']
-            room.last_msg = encrypt_message("Attachment")
+            room.last_msg = encrypt_message("📄 Attachment")
         self.chat.save()
         print(self.chat)
         room.updated = datetime.now()
