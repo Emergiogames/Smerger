@@ -1207,3 +1207,28 @@ class EnquiriesCounts(APIView):
                 return Response({'status': False, 'message': 'Post type param not found'}, status=status.HTTP_404_NOT_FOUND)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
+
+# Filter data from posts
+class FilterPosts(APIView):
+    @swagger_auto_schema(operation_description="Filtering posts", responses={200: "{'status':True,'message': 'Filtering posts'}"})
+    async def get(self, request):
+        if request.headers.get('token'):
+            exists, user = await check_user(request.headers.get('token'))
+            if exists:
+                query = Q()
+                if request.GET.get('entity_type'):
+                    query = Q(entity_type__icontains=request.GET.get('entity_type'))
+                    if request.GET.get('city'):
+                        query &= Q(city__icontains=request.GET.get('city'))
+                    if request.GET.get('industry'):
+                        query &= Q(industry__icontains=request.GET.get('industry'))
+                    if request.GET.get('ebitda'):
+                        query &= Q(ebitda__range=(0, request.GET.get('ebitda')))
+                    if request.GET.get('range_starting') and request.GET.get('range_ending'):
+                        query &= Q(range_starting__gte=float(request.GET.get('range_starting'))) & Q(range_ending__lte=float(request.GET.get('range_ending')))
+                    search = [posts async for posts in SaleProfiles.objects.filter(query)]
+                    serialized_data = await serialize_data(search, SaleProfilesSerial)
+                    return Response({'status':True,'data':serialized_data}, status=status.HTTP_200_OK)
+                return Response({'status':False,'message': 'Entity type not passed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
