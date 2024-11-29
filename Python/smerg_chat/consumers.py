@@ -94,6 +94,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         room = await Room.objects.aget(id=roomId)
         first_person = await room.first_person
         second_person = await room.second_person
+        print(first_person, second_person)
         received = await second_person if self.user.id == first_person.id else await first_person        
         # recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
         message = "🎙️ Voice message" if audio else "📄 Attachment" if attachment else msg
