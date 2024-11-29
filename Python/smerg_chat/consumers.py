@@ -89,18 +89,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_discard(self.chatroom, self.channel_name)
 
     # Saving Message to Db
-    @sync_to_async
-    def save_message(self, roomId, token, msg, audio, time, duration, attachment):
-        room = Room.objects.get(id=roomId)
+    # @sync_to_async
+    async def save_message(self, roomId, token, msg, audio, time, duration, attachment):
+        room = await Room.objects.get(id=roomId)
         recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
         message = "🎙️ Voice message" if audio else "📄 Attachment" if attachment else msg
-        self.chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(message))
+        self.chat = await ChatMessage.objects.acreate(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(message))
         room.last_msg = encrypt_message(msg)
         if audio:
             filename = f'audio_{self.user.username}_{time}.m4a'
             decoded_audio = base64.b64decode(audio)
             audio_file = ContentFile(decoded_audio, name=filename)
-            self.chat.audio.save(filename, audio_file, save=True)
+            self.chat.audio.asave(filename, audio_file, save=True)
             self.chat.duration = duration
             room.last_msg = encrypt_message("🎙️ Voice message")
         if attachment:
@@ -110,14 +110,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
             image_type = attachment_dict['fileExtension']
             filename = f'attachment_{self.user.username}_{time}{image_type}'
             attachment_file = ContentFile(decoded_attachment, name=filename)
-            self.chat.attachment.save(filename, attachment_file, save=True)
+            self.chat.attachment.asave(filename, attachment_file, save=True)
             self.chat.attachment_size = attachment_dict['size']
             self.chat.attachment_type = attachment_dict['type']
             room.last_msg = encrypt_message("📄 Attachment")
-        self.chat.save()
+        self.chat.asave()
         print(self.chat)
         room.updated = datetime.now()
-        room.save()
+        room.asave()
         room_data = {
             'id': room.id,
             'first_person': room.first_person.id,
