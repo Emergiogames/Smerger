@@ -48,4 +48,4 @@ def send_noti(sender, instance, created, **kwargs):
         room = Room.objects.get(id=instance.room.id)
         recieved = instance.sended_to
         if recieved.onesignal_id:
-            send_notifications(room.last_msg, instance.sended_by.first_name, recieved.onesignal_id)
+            send_notifications(instance.message, instance.sended_by.first_name, recieved.onesignal_id)
