@@ -93,15 +93,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def save_message(self, roomId, token, msg, audio, time, duration, attachment):
         room = Room.objects.get(id=roomId)
         recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
-        chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg))
+        self.chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg))
         room.last_msg = encrypt_message(msg)
-        
         if audio:
             filename = f'audio_{self.user.username}_{time}.m4a'
             decoded_audio = base64.b64decode(audio)
             audio_file = ContentFile(decoded_audio, name=filename)
-            chat.audio.save(filename, audio_file, save=True)
-            chat.duration = duration
+            self.chat.audio.save(filename, audio_file, save=True)
+            self.chat.duration = duration
             room.last_msg = encrypt_message("Voice message")
         if attachment:
             attachment_dict = json.loads(attachment)
@@ -110,11 +109,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
             image_type = attachment_dict['fileExtension']
             filename = f'attachment_{self.user.username}_{time}{image_type}'
             attachment_file = ContentFile(decoded_attachment, name=filename)
-            chat.attachment.save(filename, attachment_file, save=True)
-            chat.attachment_size = attachment_dict['size']
-            chat.attachment_type = attachment_dict['type']
+            self.chat.attachment.save(filename, attachment_file, save=True)
+            self.chat.attachment_size = attachment_dict['size']
+            self.chat.attachment_type = attachment_dict['type']
             room.last_msg = encrypt_message("Attachment")
-        chat.save()
+        self.chat.save()
         print(chat)
         room.updated = datetime.now()
         room.save()
@@ -132,7 +131,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S')
         }
-        return recieved.id, chat.timestamp, room_data, chat
+        return recieved.id, self.chat.timestamp, room_data, self.chat
 
 class RoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
