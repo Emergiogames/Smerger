@@ -29,6 +29,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
         exists, self.user = await check_user(token)
         self.chatroom = f'user_chatroom_{id}'
+        if self.chat.sended_to == self.user:
+            self.chat.seen = True
+            self.chat.asave()
         await self.channel_layer.group_add(self.chatroom, self.channel_name)
         await self.accept()
 
@@ -86,13 +89,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.chatroom, self.channel_name)
 
+    async def count_room(self):
+        return await Room.objects.filter(unread_messages__gt=0).acount()
+
     # Saving Message to Db
     @sync_to_async
     def save_message(self, roomId, token, msg, audio, time, duration, attachment):
         room = Room.objects.get(id=roomId)
         recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
         message = "🎙️ Voice message" if audio else "📄 Attachment" if attachment else msg
-        self.chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(message))
+        seen = True if self.user == recieved else False
+        self.chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(message), seen=seen)
         room.last_msg = encrypt_message(msg)
         if audio:
             filename = f'audio_{self.user.username}_{time}.m4a'
@@ -101,7 +108,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.chat.audio.save(filename, audio_file, save=True)
             self.chat.duration = duration
             room.last_msg = encrypt_message("🎙️ Voice message")
-        if attachment:
+        elif attachment:
             attachment_dict = json.loads(attachment)
             base64_data = attachment_dict['data']
             decoded_attachment = base64.b64decode(base64_data)
@@ -144,6 +151,13 @@ class RoomConsumer(AsyncWebsocketConsumer):
         self.room_group_name = 'room_updates'
         await self.channel_layer.group_add(self.room_group_name,self.channel_name)
         await self.accept()
+        await self.channel_layer.group_send(
+            'room_updates',
+            {
+                'type': 'room_message',
+                'room_data': room_data
+            }
+        )
 
     async def disconnect(self, close_code):
         self.user.is_active = False
