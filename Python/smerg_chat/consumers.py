@@ -15,9 +15,8 @@ from .utils.noti_utils import *
 from datetime import datetime
 from django.utils import timezone
 from channels.layers import get_channel_layer
-from django.core.files.base import ContentFile, File
+from django.core.files.base import ContentFile
 from smerg_app.utils.check_utils import *
-from django.conf import settings
 
 class ChatConsumer(AsyncWebsocketConsumer):
     # Connecting WS
