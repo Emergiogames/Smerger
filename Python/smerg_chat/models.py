@@ -8,7 +8,8 @@ class Room(models.Model):
     last_msg = models.TextField(null=True, blank=True, db_collation='utf8mb4_unicode_ci')
     updated = models.DateTimeField(auto_now=True)
     created_date = models.DateTimeField(auto_now=True)
-    unread_messages = models.IntegerField(default=0)
+    unread_messages_first = models.IntegerField(default=0)
+    unread_messages_second = models.IntegerField(default=0)
 
     class Meta:
         unique_together = ['first_person', 'second_person']

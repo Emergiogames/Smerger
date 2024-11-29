@@ -17,6 +17,7 @@ from django.utils import timezone
 from channels.layers import get_channel_layer
 from django.core.files.base import ContentFile
 from smerg_app.utils.check_utils import *
+from django.db.models import Q
 
 class ChatConsumer(AsyncWebsocketConsumer):
     # Connecting WS
@@ -30,9 +31,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         exists, self.user = await check_user(token)
         self.chatroom = f'user_chatroom_{id}'
         await ChatMessage.objects.filter(sended_to=self.user, seen=False).aupdate(seen=True)
-        # async for i in ChatMessage.objects.filter(sended_to=self.user, seen=False):
-        #     i.seen = True
-        #     await i.asave()
+        await Room.objects.filter(id=id, first_person=self.user).aupdate(unread_messages_first=0)
+        await Room.objects.filter(id=id, second_person==self.user).aupdate(unread_messages_second=0)
         await self.channel_layer.group_add(self.chatroom, self.channel_name)
         await self.accept()
 
@@ -95,13 +95,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @sync_to_async
     def save_message(self, roomId, token, msg, audio, time, duration, attachment):
         room = Room.objects.get(id=roomId)
-        recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
+        if self.user.id == room.first_person.id:
+            recieved = room.second_person
+            room.unread_messages_second += 1
+        else:
+            recieved = room.first_person
+            room.unread_messages_first += 1
+        seen = True if self.user == recieved else False
         message = "🎙️ Voice message" if audio else "📄 Attachment" if attachment else msg
-        if self.user == recieved:
-            seen = True
-        else: 
-            seen = False
-            room.unread_messages += 1
         self.chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(message), seen=seen)
         room.last_msg = encrypt_message(msg)
         if audio:
