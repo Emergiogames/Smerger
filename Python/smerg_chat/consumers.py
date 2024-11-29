@@ -58,7 +58,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'sendedTo': recieved,
             'duration': data.get('duration') if data.get('duration') else None,
             'sendedBy': self.user.id,
-            'time': str(created)
+            'time': str(created),
+            'seen':self.chat.seen
         }
 
         ## Send Message
@@ -89,16 +90,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.chatroom, self.channel_name)
 
-    async def count_room(self):
-        return await Room.objects.filter(unread_messages__gt=0).acount()
-
     # Saving Message to Db
     @sync_to_async
     def save_message(self, roomId, token, msg, audio, time, duration, attachment):
         room = Room.objects.get(id=roomId)
         recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
         message = "🎙️ Voice message" if audio else "📄 Attachment" if attachment else msg
-        seen = True if self.user == recieved else False
+        if self.user == recieved:
+            seen = True
+        else: 
+            seen = False
+            room.unread_messages += 1
         self.chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(message), seen=seen)
         room.last_msg = encrypt_message(msg)
         if audio:
@@ -135,7 +137,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S'),
             'active': recieved.is_active,
             'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
-            'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S')
+            'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S'),
+            "unread_messages": room.unread_messages,
+            "total_unread": Room.objects.filter(unread_messages__gt=0).count()
         }
         return recieved.id, self.chat.timestamp, room_data, self.chat
 
@@ -151,6 +155,9 @@ class RoomConsumer(AsyncWebsocketConsumer):
         self.room_group_name = 'room_updates'
         await self.channel_layer.group_add(self.room_group_name,self.channel_name)
         await self.accept()
+        room_data = {
+            "total_unread": await Room.objects.filter(unread_messages__gt=0).acount()
+        }
         await self.channel_layer.group_send(
             'room_updates',
             {
