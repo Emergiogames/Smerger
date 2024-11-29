@@ -935,8 +935,8 @@ class Featured(APIView):
             serial = SaleProfilesSerial
         async for i in product.order_by('-id'):
             user_id = await sync_to_async(lambda: i.user)()
-            if await Subscription.objects.filter(user=user_id).aexists():
-                subscribed = await Subscription.objects.aget(user=user_id)
+            if await Subscription.objects.filter(user=user_id, plan__type=request.GET.get('type')).aexists():
+                subscribed = await Subscription.objects.aget(user=user_id, plan__type=request.GET.get('type'))
                 plan_id = await sync_to_async(lambda: subscribed.plan.id)()
                 plan = await Plan.objects.aget(id = plan_id)
                 if plan.feature:
