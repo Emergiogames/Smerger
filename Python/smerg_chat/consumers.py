@@ -91,12 +91,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # Saving Message to Db
     # @sync_to_async
     async def save_message(self, roomId, token, msg, audio, time, duration, attachment):
-        room = await Room.objects.aget(id=roomId)
-        first_person = room.first_person
-        second_person = room.second_person
-        print(first_person, second_person)
-        received = await second_person if self.user.id == await first_person.id else await first_person        
-        # recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
+        room = await Room.objects.aget(id=roomId, select_related=['first_person', 'second_person'])
+        recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
         message = "🎙️ Voice message" if audio else "📄 Attachment" if attachment else msg
         self.chat = await ChatMessage.objects.acreate(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(message))
         room.last_msg = encrypt_message(msg)
