@@ -32,7 +32,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.chatroom = f'user_chatroom_{id}'
         await ChatMessage.objects.filter(sended_to=self.user, seen=False).aupdate(seen=True)
         await Room.objects.filter(id=id, first_person=self.user).aupdate(unread_messages_first=0)
-        await Room.objects.filter(id=id, second_person==self.user).aupdate(unread_messages_second=0)
+        await Room.objects.filter(id=id, second_person=self.user).aupdate(unread_messages_second=0)
         await self.channel_layer.group_add(self.chatroom, self.channel_name)
         await self.accept()
 
