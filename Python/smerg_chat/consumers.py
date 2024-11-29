@@ -29,7 +29,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
         exists, self.user = await check_user(token)
         self.chatroom = f'user_chatroom_{id}'
-        await ChatMessage.objects.filter(sended_to=self.user, seen=False).update(seen=True)
+        await ChatMessage.objects.filter(sended_to=self.user, seen=False).aupdate(seen=True)
         # async for i in ChatMessage.objects.filter(sended_to=self.user, seen=False):
         #     i.seen = True
         #     await i.asave()
