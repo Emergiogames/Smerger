@@ -850,7 +850,10 @@ class Plans(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                plan = [plans async for plans in Plan.objects.filter(type=request.GET.get('type')).order_by('-id')]
+                if request.GET.get('type'):
+                    plan = [plans async for plans in Plan.objects.filter(type=request.GET.get('type')).order_by('-id')]
+                else:
+                    plan = [plans async for plans in Plan.objects.all().order_by('-id')]
                 serialized_data = await serialize_data(plan, PlanSerial)
                 return Response(serialized_data)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
