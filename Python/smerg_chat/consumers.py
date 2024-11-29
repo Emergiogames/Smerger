@@ -149,6 +149,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "unread_messages": unread,
             "total_unread": total
         }
+        print(room_data)
         return recieved.id, self.chat.timestamp, room_data, self.chat
 
 class RoomConsumer(AsyncWebsocketConsumer):
@@ -166,6 +167,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
         room_data = {
             "total_unread": await Room.objects.filter(Q(first_person=self.user, unread_messages_first__gt=0) | Q(second_person=self.user, unread_messages_second__gt=0)).acount()
         }
+        print(room_data)
         await self.channel_layer.group_send(
             'room_updates',
             {
