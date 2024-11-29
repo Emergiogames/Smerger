@@ -1225,8 +1225,12 @@ class FilterPosts(APIView):
                         query &= Q(city__icontains=request.GET.get('city'))
                     if request.GET.get('industry'):
                         query &= Q(industry__icontains=request.GET.get('industry'))
+                    if request.GET.get('entity'):
+                        query &= Q(entity__icontains=request.GET.get('entity'))
                     if request.GET.get('ebitda'):
                         query &= Q(ebitda__range=(0, request.GET.get('ebitda')))
+                    if request.GET.get('year_starting') and request.GET.get('year_ending'):
+                        query &= Q(establish_yr__range=(request.GET.get('year_starting'), request.GET.get('year_ending')))
                     if request.GET.get('range_starting') and request.GET.get('range_ending'):
                         query &= Q(range_starting__gte=float(request.GET.get('range_starting'))) & Q(range_ending__lte=float(request.GET.get('range_ending')))
                     search = [posts async for posts in SaleProfiles.objects.filter(query)]
