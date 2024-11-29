@@ -114,7 +114,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.chat.attachment_type = attachment_dict['type']
             room.last_msg = encrypt_message("Attachment")
         self.chat.save()
-        print(chat)
+        print(self.chat)
         room.updated = datetime.now()
         room.save()
         room_data = {
