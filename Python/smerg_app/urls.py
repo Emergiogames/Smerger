@@ -49,4 +49,5 @@ urlpatterns = [
     path('report',ReportPost.as_view()), # Report the post
     path('recent_enquiries',RecentEnquiries.as_view()), # recent enquiries
     path('count_enquiries',EnquiriesCounts.as_view()), # count of recent enquires
-    path('filter_posts', FilterPosts.as_view()), # Filter data from posts
+    path('filter_posts', Filte.as_view()), # Filter data from posts
+]
