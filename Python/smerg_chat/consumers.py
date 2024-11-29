@@ -101,7 +101,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             audio_file = ContentFile(decoded_audio, name=filename)
             self.chat.audio.save(filename, audio_file, save=True)
             self.chat.duration = duration
-            self.chat.message = encrypt_message("Voice Message")
             room.last_msg = encrypt_message("Voice message")
         if attachment:
             attachment_dict = json.loads(attachment)
@@ -113,7 +112,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.chat.attachment.save(filename, attachment_file, save=True)
             self.chat.attachment_size = attachment_dict['size']
             self.chat.attachment_type = attachment_dict['type']
-            self.chat.message = encrypt_message("Attachment")
             room.last_msg = encrypt_message("Attachment")
         self.chat.save()
         print(self.chat)
