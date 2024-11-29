@@ -42,7 +42,6 @@ urlpatterns = [
     path('graph',Graph.as_view()), # Graph
     path('userid',User.as_view()), # User Id passing
     path('onesignal',OneSignal.as_view()), # OneSignal Id updating
-    # path('onesignal', onesignal_id), # OneSignal Id updating
     path('popularsearch',Popularsearch.as_view()), #popular searched posts
     path('popularsearch<int:id>',Popularsearch.as_view()),# popular searched posts
     path('recentsearchview',RecentSearchview.as_view()), #recently viewed posts
@@ -50,4 +49,5 @@ urlpatterns = [
     path('report',ReportPost.as_view()), # Report the post
     path('recent_enquiries',RecentEnquiries.as_view()), # recent enquiries
     path('count_enquiries',EnquiriesCounts.as_view()), # count of recent enquires
+    path('filter_posts', FilterPosts.as_view()), # Filter data from posts
 ]

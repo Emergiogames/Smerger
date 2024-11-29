@@ -210,7 +210,7 @@ class Profiles(APIView):
                 profile_exist = await Profile.objects.filter(user=user, type=request.data.get('type')).aexists()
                 subscription = await Subscription.objects.filter(user=user, plan__type=request.data.get('type')).aexists()
                 if not profile_exist and subscription:
-                    data = request.data.copy()
+                    data = request.data
                     data['user'] = user.id 
                     saved, resp = await create_serial(ProfileSerial, data)
                     if saved:
@@ -275,7 +275,7 @@ class BusinessList(APIView):
             if exists:
                 # request.data['user'] = user.id
                 # request.data['entity_type'] = 'business'
-                data = request.data.copy()
+                data = request.data
                 data['user'] = user.id
                 data['entity_type'] = 'business'
                 subscribed = await check_subscription(user, "business")
@@ -350,7 +350,7 @@ class InvestorList(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                data = request.data.copy()
+                data = request.data
                 # request.data['user'] = user.id
                 # request.data['entity_type'] = 'investor'
                 data['user'] = user.id
@@ -425,7 +425,7 @@ class FranchiseList(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                data = request.data.copy()
+                data = request.data
                 data['user'] = user.id
                 data['entity_type'] = 'franchise'
                 # request.data['user'] = user.id
@@ -499,7 +499,7 @@ class UserView(APIView):
                 already_exists = await UserProfile.objects.filter(Q(username=request.data.get('phone'))|Q(email=request.data.get('email'))& ~Q(id=user.id)).aexists() 
                 if already_exists:
                     return Response({'status':False,'message': 'User with same details already exists'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-                # mutable_data = request.data.copy()
+                # mutable_data = request.data
                 saved, resp = await update_serial(UserSerial, request.data, user)
                 if saved:
                     return Response({'status':True,'message': 'User updated successfully'}, status=status.HTTP_201_CREATED)
@@ -586,7 +586,7 @@ class Wishlists(APIView):
             if exists:
                 # request.data['user'] = user.id
                 # request.data['product'] = request.data.get('productId')
-                data = request.data.copy()
+                data = request.data
                 data['user'] = user.id
                 data['product'] = request.data.get('productId')
                 product = await SaleProfiles.objects.aget(id=request.data.get('productId'))
@@ -640,7 +640,7 @@ class RecentActs(APIView):
                     return Response({'status':False,'message': 'Advisor cant add'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
                 # request.data['user'] = user.id
                 # request.data['product'] = request.data.get('productId')
-                data = request.data.copy()
+                data = request.data
                 data['user'] = user.id
                 data['product'] = request.data.get('productId')
 
@@ -667,7 +667,7 @@ class Suggests(APIView):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
                 # request.data['user'] = user.id
-                data = request.data.copy()
+                data = request.data
                 data['user'] = user.id
                 saved, resp = await create_serial(SuggestSerial, data)
                 if saved:
@@ -699,7 +699,7 @@ class Testimonials(APIView):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
                 # request.data['user'] = user.id
-                data = request.data.copy()
+                data = request.data
                 data['user'] = user.id
                 saved, resp = await create_serial(TestSerial, data)
                 if saved:
@@ -761,7 +761,7 @@ class Prefer(APIView):
                 if already_exists:
                     return Response({'status':True,'message': 'Preference already exist'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
                 # request.data['user'] = user.id
-                data = request.data.copy()
+                data = request.data
                 data['user'] = user.id
                 saved, resp = await create_serial(PrefSerial, data)
                 if saved:
@@ -873,7 +873,7 @@ class Subscribe(APIView):
                         plan_data = await sync_to_async(lambda: PlanSerial(plan).data)()
                         plan_id = await sync_to_async(lambda: subscription.plan.id)()
                         return Response({'status':True, 'id':plan_id, 'posts':remaining_posts, "expiry":expiry_date, 'plan':plan_data})
-                return Response({'status':False,'message': 'Subscription doesnot exist'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                return Response({'status':False,'message': 'Subscription doesnot exist'}, status=status.HTTP_404_NOT_FOUND)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -893,7 +893,7 @@ class Subscribe(APIView):
                         # request.data['expiry_date'] = (timezone.now() + relativedelta(months=plan.time_period)).strftime('%Y-%m-%d')
                         # request.data['remaining_posts'] = plan.post_number
                         # request.data['plan'] = plan.id
-                        data = request.data.copy()
+                        data = request.data
                         data['user'] = user.id
                         data['expiry_date'] = (timezone.now() + relativedelta(months=plan.time_period)).strftime('%Y-%m-%d')
                         data['remaining_posts'] = plan.post_number
@@ -1205,5 +1205,30 @@ class EnquiriesCounts(APIView):
                         return Response({'status': True, 'impressions':impression, 'today_count': counts['today_count'], 'yesterday_count': counts['yesterday_count'], 'total_count': counts['total_count']})
                     return Response({'status': False, 'message': 'User has not added any posts in the requested type'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
                 return Response({'status': False, 'message': 'Post type param not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
+
+# Filter data from posts
+class FilterPosts(APIView):
+    @swagger_auto_schema(operation_description="Filtering posts", responses={200: "{'status':True,'message': 'Filtering posts'}"})
+    async def get(self, request):
+        if request.headers.get('token'):
+            exists, user = await check_user(request.headers.get('token'))
+            if exists:
+                query = Q()
+                if request.GET.get('entity_type'):
+                    query = Q(entity_type__icontains=request.GET.get('entity_type'))
+                    if request.GET.get('city'):
+                        query &= Q(city__icontains=request.GET.get('city'))
+                    if request.GET.get('industry'):
+                        query &= Q(industry__icontains=request.GET.get('industry'))
+                    if request.GET.get('ebitda'):
+                        query &= Q(ebitda__range=(0, request.GET.get('ebitda')))
+                    if request.GET.get('range_starting') and request.GET.get('range_ending'):
+                        query &= Q(range_starting__gte=float(request.GET.get('range_starting'))) & Q(range_ending__lte=float(request.GET.get('range_ending')))
+                    search = [posts async for posts in SaleProfiles.objects.filter(query)]
+                    serialized_data = await serialize_data(search, SaleProfilesSerial)
+                    return Response({'status':True,'data':serialized_data}, status=status.HTTP_200_OK)
+                return Response({'status':False,'message': 'Entity type not passed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)

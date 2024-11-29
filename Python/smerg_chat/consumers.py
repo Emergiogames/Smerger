@@ -1,4 +1,4 @@
-import json, os, asyncio, base64
+import json, os, asyncio, base64, uuid
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smerger.settings")
 
 import django
@@ -18,6 +18,7 @@ from channels.layers import get_channel_layer
 from django.core.files.base import ContentFile, File
 from smerg_app.utils.check_utils import *
 from django.conf import settings
+from PIL import Image
 
 class ChatConsumer(AsyncWebsocketConsumer):
     # Connecting WS
@@ -37,14 +38,24 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         print('Received', text_data)
         data = json.loads(text_data)
-        recieved, created, room_data, audio = await self.save_message(data.get('roomId'), data.get('token'), data.get('message'), data.get('audio'), datetime.now().strftime('%Y%m%d_%H%M%S'), data.get('duration'))
+        recieved, created, room_data, chat = await self.save_message(
+            data.get('roomId'),
+            data.get('token'),
+            data.get('message'), 
+            data.get('audio'), 
+            datetime.now().strftime('%Y%m%d_%H%M%S'), 
+            data.get('duration'), 
+            data.get('attachment')
+        )
         response = {
             'message': data.get('message'),
-            'audio': audio.url if audio else None,
+            'messageType': 'voice' if chat.audio else 'attachment' if chat.attachment else 'text',
+            'audio': chat.audio.url if chat.audio else None,  
+            'attachment': {'url' : chat.attachment.url if chat.attachment else None,'size': chat.attachment_size if chat.attachment else None,  'type': chat.attachment_type if chat.attachment else None, },  
             'roomId': data.get('roomId'),
             'token': data.get('token'),
             'sendedTo': recieved,
-            'duration': data.get('duration'),
+            'duration': data.get('duration') if data.get('duration') else None,
             'sendedBy': self.user.id,
             'time': str(created)
         }
@@ -79,7 +90,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     # Saving Message to Db
     @sync_to_async
-    def save_message(self, roomId, token, msg, audio, time, duration):
+    def save_message(self, roomId, token, msg, audio, time, duration, attachment):
         room = Room.objects.get(id=roomId)
         recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
         chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg))
@@ -92,9 +103,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
             chat.audio.save(filename, audio_file, save=True)
             chat.duration = duration
             room.last_msg = encrypt_message("Voice message")
+        if attachment:
+            attachment_dict = json.loads(attachment)
+            base64_data = attachment_dict['data']
+            decoded_attachment = base64.b64decode(base64_data)
+            image_type = attachment_dict['fileExtension']
+            filename = f'attachment_{self.user.username}_{time}{image_type}'
+            attachment_file = ContentFile(decoded_attachment, name=filename)
+            chat.attachment.save(filename, attachment_file, save=True)
+            chat.attachment_size = attachment_dict['size']
+            chat.attachment_type = attachment_dict['type']
+            room.last_msg = encrypt_message("Attachment")
         chat.save()
         print(chat)
-        created = chat.timestamp
         room.updated = datetime.now()
         room.save()
         room_data = {
@@ -111,7 +132,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S')
         }
-        return recieved.id, created, room_data, chat.audio
+        return recieved.id, chat.timestamp, room_data, chat
 
 class RoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):

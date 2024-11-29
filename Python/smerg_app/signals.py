@@ -27,17 +27,3 @@ def log_model_save(sender, instance, created, **kwargs):
             )
         else:
             instance.delete()
-
-
-@receiver(user_logged_in)
-def create_user_session(sender, user, request, **kwargs):
-    # Start a new session on login
-    UserSession.objects.create(user=user, login_time=timezone.now())
-
-@receiver(user_logged_out)
-def close_user_session(sender, user, request, **kwargs):
-    # Close the last open session on logout
-    session = UserSession.objects.filter(user=user, logout_time__isnull=True).last()
-    if session:
-        session.logout_time = timezone.now()
-        session.save()
