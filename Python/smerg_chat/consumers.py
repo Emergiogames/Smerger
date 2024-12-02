@@ -155,7 +155,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         token = self.scope['query_string'].decode().split('=')[-1]
         exists, self.user = await check_user(token)
-        self.user = user_result
+        # self.user = user_result
         self.user.active_from = timezone.now()
         self.user.is_active = True
         await self.user.asave()
