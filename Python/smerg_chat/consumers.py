@@ -18,6 +18,7 @@ from channels.layers import get_channel_layer
 from django.core.files.base import ContentFile
 from smerg_app.utils.check_utils import *
 from django.db.models import Q
+from django.utils import timezone
 
 class ChatConsumer(AsyncWebsocketConsumer):
     # Connecting WS
@@ -125,7 +126,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             room.last_msg = encrypt_message("📄 Attachment")
         self.chat.save()
         print(self.chat)
-        room.updated = datetime.now()
+        room.updated = timezone.localtime(timezone.now()) 
         room.save()
         if room.first_person == self.user:
             unread = room.unread_messages_second
@@ -145,7 +146,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S'),
             'active': recieved.is_active,
             'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
-            'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S'),
             "unread_messages": unread,
             "total_unread": total_second + total_first
         }
