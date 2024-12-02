@@ -18,7 +18,6 @@ def send_twilio_message(otp, number):
     )
     print(f"Message sent with SID: {message.sid}")
 
-# This wraps the synchronous function inside an asynchronous context
 async def twilio_int(otp, number):
     loop = asyncio.get_event_loop()
     await loop.run_in_executor(None, async_to_sync(send_twilio_message), otp, number)
