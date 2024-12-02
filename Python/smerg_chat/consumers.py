@@ -95,7 +95,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @sync_to_async
     def save_message(self, roomId, token, msg, audio, time, duration, attachment):
         room = Room.objects.get(id=roomId)
-        if self.user.id == room.first_person.id:
+        if self.user == room.first_person:
             recieved = room.second_person
             room.unread_messages_second += 1
         else:
@@ -133,6 +133,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             unread = room.unread_messages_first
         total_second = Room.objects.filter(second_person=self.user, unread_messages_first__gt=0).count()
         total_first = Room.objects.filter(first_person=self.user, unread_messages_second__gt=0).count()
+        print(total_first,total_second)
         room_data = {
             'id': room.id,
             'first_person': room.first_person.id,
