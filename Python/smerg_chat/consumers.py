@@ -146,7 +146,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'active': recieved.is_active,
             'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
             "unread_messages": unread,
-            "total_unread": total_second + total_first
+            "total_unread_first": total_first,
+            "total_unread_second": total_second
         }
         print(room_data)
         return recieved.id, self.chat.timestamp, room_data, self.chat
@@ -165,7 +166,8 @@ class RoomConsumer(AsyncWebsocketConsumer):
         total_second = await Room.objects.filter(second_person=self.user, unread_messages_second__gt=0).acount()
         total_first = await Room.objects.filter(first_person=self.user, unread_messages_first__gt=0).acount()
         room_data = {
-            "total_unread": total_first + total_second,
+            "total_unread_first": total_first,
+            "total_unread_second": total_second,
             "total_noti": await Notification.objects.filter(user=self.user).acount()
         }
         print(f"For User {self.user} room_data is {room_data} with {total_first} & {total_second}")
