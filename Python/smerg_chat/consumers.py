@@ -82,7 +82,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         )
         await self.channel_layer.group_send(
-            f'user_{recieved.id}',
+            f'user_{recieved}',
             {
                 'type': 'room_message',
                 'room_data': room_data
