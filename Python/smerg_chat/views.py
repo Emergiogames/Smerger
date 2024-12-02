@@ -35,7 +35,7 @@ class Rooms(APIView):
                 reciever = await SaleProfiles.objects.aget(id=request.data.get('receiverId'))
                 recieved_user = await sync_to_async(lambda: reciever.user)()
                 recieved_name = await sync_to_async(lambda: reciever.name)()
-                recieved_image = await sync_to_async(lambda: reciever.image)()
+                recieved_image = await sync_to_async(lambda: reciever.user.image)()
                 if recieved_image:
                     image = recieved_image.url 
                 else: 
