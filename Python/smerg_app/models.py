@@ -267,8 +267,9 @@ class Notification(models.Model):
     user = models.ManyToManyField(UserProfile, related_name='notifications')
     title =  models.CharField(max_length=100)
     description = models.TextField()    
-    image = models.FileField(storage=MediaStorage(),upload_to='notification/image',null=True,blank=True)
-    url = models.URLField(max_length=200,null=True,blank=True)
+    image = models.FileField(storage=MediaStorage(), upload_to='notification/image',null=True,blank=True)
+    url = models.URLField(max_length=200, null=True, blank=True)
+    read = models.BooleanField(default=False)
     created_on = models.DateField(auto_now=True)
 
 # For Popular searched items and recently Searched items

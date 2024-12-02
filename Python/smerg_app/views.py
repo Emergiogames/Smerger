@@ -684,8 +684,8 @@ class Testimonials(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                if request.GET.get('userId'):
-                    user = await UserProfile.objects.aget(id=request.GET.get('userId'))
+                # if request.GET.get('userId'):
+                #     user = await UserProfile.objects.aget(id=request.GET.get('userId'))
                 tests = [test async for test in Testimonial.objects.filter(user=user).order_by('-id')]
                 serialized_data = await serialize_data(tests, TestSerial)
                 return Response(serialized_data)
@@ -888,14 +888,9 @@ class Subscribe(APIView):
             if exists:
                 # verified, payment_details = await verify_payment(request.data.get('transaction_id'))
                 # if verified:
-                # subscribed = await check_subscription(user)
                 if await Plan.objects.filter(id=request.data.get('id')).aexists():
                     plan = await Plan.objects.aget(id=request.data.get('id'))
                     if not await Subscription.objects.filter(user=user).aexists():
-                        # request.data['user'] = user.id
-                        # request.data['expiry_date'] = (timezone.now() + relativedelta(months=plan.time_period)).strftime('%Y-%m-%d')
-                        # request.data['remaining_posts'] = plan.post_number
-                        # request.data['plan'] = plan.id
                         data = request.data
                         data['user'] = user.id
                         data['expiry_date'] = (timezone.now() + relativedelta(months=plan.time_period)).strftime('%Y-%m-%d')

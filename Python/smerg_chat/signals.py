@@ -29,7 +29,7 @@ def notify_room_update(sender, instance, **kwargs):
     )
 
 @receiver(post_save, sender=Notification)
-def notify_noti_update(sender, instance, **kwargs):
+def notify_update(sender, instance, **kwargs):
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
         'noti_updates',
@@ -39,6 +39,14 @@ def notify_noti_update(sender, instance, **kwargs):
                 'title': instance.title,
                 'description': instance.description,
             }
+        }
+    )
+
+    await self.channel_layer.group_send(
+        'room_updates',
+        {
+            'type': 'room_message',
+            'room_data': room_data
         }
     )
 
