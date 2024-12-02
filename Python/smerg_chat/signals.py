@@ -42,14 +42,6 @@ def notify_update(sender, instance, **kwargs):
         }
     )
 
-    # await self.channel_layer.group_send(
-    #     'room_updates',
-    #     {
-    #         'type': 'room_message',
-    #         'room_data': room_data
-    #     }
-    # )
-
 @receiver(post_save, sender=ChatMessage)
 def send_noti(sender, instance, created, **kwargs):
     if created:
