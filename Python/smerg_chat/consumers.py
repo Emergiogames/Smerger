@@ -167,7 +167,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
             "total_unread": total,
             "total_noti": await Notification.objects.filter(user=self.user).acount()
         }
-        print(room_data)
+        print(f"For User {self.user} room_data is {room_data}")
         await self.channel_layer.group_send(
             'room_updates',
             {
