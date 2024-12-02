@@ -82,7 +82,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         )
 
-        room_data['total_unread'] = await Room.objects.filter(second_person__id=recieved, unread_messages_first__gt=0).acount() + await Room.objects.filter(first_person__id=recieved, unread_messages_second__gt=0).acount()
+        room_data['total_unread'] = await Room.objects.filter(second_person__id=recieved, unread_messages_second__gt=0).acount() + await Room.objects.filter(first_person__id=recieved, unread_messages_first__gt=0).acount()
         await self.channel_layer.group_send(
             f'user_{recieved}',
             {
@@ -140,8 +140,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             unread = room.unread_messages_second
         else:
             unread = room.unread_messages_first
-        total_second = Room.objects.filter(second_person=self.user, unread_messages_first__gt=0).count()
-        total_first = Room.objects.filter(first_person=self.user, unread_messages_second__gt=0).count()
+        total_second = Room.objects.filter(second_person=self.user, unread_messages_second__gt=0).count()
+        total_first = Room.objects.filter(first_person=self.user, unread_messages_first__gt=0).count()
         room_data = {
             'id': room.id,
             'first_person': room.first_person.id,
