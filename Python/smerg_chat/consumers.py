@@ -33,6 +33,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await ChatMessage.objects.filter(sended_to=self.user, seen=False).aupdate(seen=True)
         await Room.objects.filter(id=id, first_person=self.user).aupdate(unread_messages_first=0)
         await Room.objects.filter(id=id, second_person=self.user).aupdate(unread_messages_second=0)
+
+        total_second = await Room.objects.filter(second_person=self.user, unread_messages_second__gt=0).acount()
+        total_first = await Room.objects.filter(first_person=self.user, unread_messages_first__gt=0).acount()
+        room_data = {
+            "total_unread": total_first + total_second,
+            "total_noti": await Notification.objects.filter(user=self.user).acount()
+        }
+        print(f"For User {self.user} room_data is {room_data} with {total_first} & {total_second}")
+        await self.channel_layer.group_send(
+            f'user_{self.user.id}',
+            {
+                'type': 'room_message',
+                'room_data': room_data
+            }
+        )
         await self.channel_layer.group_add(self.chatroom, self.channel_name)
         await self.accept()
 
