@@ -18,7 +18,6 @@ from channels.layers import get_channel_layer
 from django.core.files.base import ContentFile
 from smerg_app.utils.check_utils import *
 from django.db.models import Q
-from django.utils import timezone
 
 class ChatConsumer(AsyncWebsocketConsumer):
     # Connecting WS
@@ -126,7 +125,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             room.last_msg = encrypt_message("📄 Attachment")
         self.chat.save()
         print(self.chat)
-        room.updated = timezone.localtime(timezone.now()) 
+        room.updated = datetime.now()
         room.save()
         if room.first_person == self.user:
             unread = room.unread_messages_second
@@ -134,7 +133,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             unread = room.unread_messages_first
         total_second = Room.objects.filter(second_person=self.user, unread_messages_first__gt=0).count()
         total_first = Room.objects.filter(first_person=self.user, unread_messages_second__gt=0).count()
-        room_data = {
+        room_data = {  
             'id': room.id,
             'first_person': room.first_person.id,
             'first_name': room.first_person.first_name,
@@ -164,8 +163,10 @@ class RoomConsumer(AsyncWebsocketConsumer):
         self.room_group_name = 'room_updates'
         await self.channel_layer.group_add(self.room_group_name,self.channel_name)
         await self.accept()
+        total_second = Room.objects.filter(second_person=self.user, unread_messages_first__gt=0).count()
+        total_first = Room.objects.filter(first_person=self.user, unread_messages_second__gt=0).count()
         room_data = {
-            "total_unread": await Room.objects.filter(Q(first_person=self.user, unread_messages_second__gt=0) | Q(second_person=self.user, unread_messages_first__gt=0)).acount(),
+            "total_unread": total_second + total_first,
             "total_noti": await Notification.objects.filter(user=self.user).acount()
         }
         print(room_data)
