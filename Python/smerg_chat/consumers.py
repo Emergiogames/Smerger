@@ -81,6 +81,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'room_data': room_data
             }
         )
+        await self.channel_layer.group_send(
+            f'user_{recieved.id}',
+            {
+                'type': 'room_message',
+                'room_data': room_data
+            }
+        )
 
     # Sending Message to Frontend
     async def chat_message(self, event):
