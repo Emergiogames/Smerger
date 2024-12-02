@@ -867,16 +867,20 @@ class Subscribe(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                if await Subscription.objects.filter(user=user, plan__type=request.GET.get('type')).aexists():
-                    subscription = await Subscription.objects.aget(user=user, plan__type=request.GET.get('type'))
-                    remaining_posts = await sync_to_async(lambda: subscription.remaining_posts)()
-                    expiry_date = await sync_to_async(lambda: subscription.expiry_date)()
-                    if subscription.remaining_posts != 0 and subscription.expiry_date >= timezone.now().date():
-                        plan = await sync_to_async(lambda: subscription.plan)()
-                        plan_data = await sync_to_async(lambda: PlanSerial(plan).data)()
-                        plan_id = await sync_to_async(lambda: subscription.plan.id)()
-                        return Response({'status':True, 'id':plan_id, 'posts':remaining_posts, "expiry":expiry_date, 'plan':plan_data})
-                return Response({'status':False,'message': 'Subscription doesnot exist'}, status=status.HTTP_404_NOT_FOUND)
+                if request.GET.get('type'):
+                    if await Subscription.objects.filter(user=user, plan__type=request.GET.get('type')).aexists():
+                        subscription = await Subscription.objects.aget(user=user, plan__type=request.GET.get('type'))
+                        remaining_posts = await sync_to_async(lambda: subscription.remaining_posts)()
+                        expiry_date = await sync_to_async(lambda: subscription.expiry_date)()
+                        if subscription.remaining_posts != 0 and subscription.expiry_date >= timezone.now().date():
+                            plan = await sync_to_async(lambda: subscription.plan)()
+                            plan_data = await sync_to_async(lambda: PlanSerial(plan).data)()
+                            plan_id = await sync_to_async(lambda: subscription.plan.id)()
+                            return Response({'status':True, 'id':plan_id, 'posts':remaining_posts, "expiry":expiry_date, 'plan':plan_data})
+                    return Response({'status':False,'message': 'Subscription doesnot exist'}, status=status.HTTP_404_NOT_FOUND)
+                else:
+                    if await Subscription.objects.filter(user=user).aexists():
+                        return Response({'status':True})
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
