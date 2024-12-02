@@ -927,7 +927,8 @@ class Featured(APIView):
                 product = SaleProfiles.objects.filter(entity_type=request.GET.get('type')).order_by('-id')
                 serial = SaleProfilesSerial
             else:
-                product = Profile.objects.filter(type = "advisor").order_by('-id')
+                print("WOEKING >>>>>>>!!!!")
+                product = Profile.objects.filter(type="advisor").order_by('-id')
                 serial = ProfileSerial
         else:
             product = SaleProfiles.objects.all()
