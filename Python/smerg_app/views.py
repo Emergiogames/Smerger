@@ -74,7 +74,7 @@ class RegisterOtp(APIView):
             key = f'otp_{request.data.get('phone')}'
             cache_value = await sync_to_async(cache.get)(key)
             if not cache_value:
-                otp = f"{request.data.get('otp'):04d}"
+                otp = f"{otp:04d}"
                 phone = request.data.get('phone')
                 await sync_to_async(cache.set)(key, f"{otp:04d}", timeout=60)
                 await twilio_int(otp, phone)
