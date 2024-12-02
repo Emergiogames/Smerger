@@ -924,15 +924,15 @@ class Featured(APIView):
         data = []
         if request.GET.get('type'):
             if request.GET.get('type') != "advisor":
-                product = SaleProfiles.objects.filter(entity_type=request.GET.get('type'))
+                product = SaleProfiles.objects.filter(entity_type=request.GET.get('type')).order_by('-id')
                 serial = SaleProfilesSerial
             else:
-                product = Profile.objects.filter(type = "advisor")
+                product = Profile.objects.filter(type = "advisor").order_by('-id')
                 serial = ProfileSerial
         else:
             product = SaleProfiles.objects.all()
             serial = SaleProfilesSerial
-        async for i in product.order_by('-id'):
+        async for i in product:
             user_id = await sync_to_async(lambda: i.user)()
             if await Subscription.objects.filter(user=user_id, plan__type=request.GET.get('type')).aexists():
                 subscribed = await Subscription.objects.aget(user=user_id, plan__type=request.GET.get('type'))
