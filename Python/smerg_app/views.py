@@ -74,10 +74,8 @@ class RegisterOtp(APIView):
             key = f'otp_{request.data.get('phone')}'
             cache_value = await sync_to_async(cache.get)(key)
             if not cache_value:
-                otp = f"{otp:04d}"
-                phone = request.data.get('phone')
-                await sync_to_async(cache.set)(key, otp, timeout=60)
-                await twilio_int(otp, phone)
+                await sync_to_async(cache.set)(key, f"{otp:04d}", timeout=60)
+                await twilio_int(f"{otp:04d}", request.data.get('phone'))
             return Response({'status':True}, status=status.HTTP_200_OK)
         return Response({'status':False,'message':"Phone number/ Email not found"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1185,7 +1183,7 @@ class RecentEnquiries(APIView):
                     if user_posts:
                         async for room in Room.objects.filter(Q(first_person=user) | Q(second_person=user)).order_by('-created_date')[:5]:
                             if await ChatMessage.objects.filter(room=room).aexists():
-                                other_person = room.second_person if room.first_person == user else room.first_person
+                                other_person = await sync_to_async(lambda: room.second_person if room.first_person == user else room.first_person)()
                                 enquiry_info = { 'other_person': other_person.username,'created_date': room.created_date}
                                 return Response({'status': True, 'recent_enquiries': enquiry_info}, status=status.HTTP_200_OK)
                     return Response({'status': False, 'message': 'User has not added any posts in the requested type'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)

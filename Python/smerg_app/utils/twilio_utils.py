@@ -20,4 +20,4 @@ def send_twilio_message(otp, number):
 
 async def twilio_int(otp, number):
     loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, async_to_sync(send_twilio_message), otp, number)
+    result = await loop.run_in_executor(None, send_twilio_message, otp, number)
