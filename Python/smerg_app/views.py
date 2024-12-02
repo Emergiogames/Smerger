@@ -942,7 +942,10 @@ class Featured(APIView):
                 if plan.feature:
                     data.append(i)
         if len(data) == 0:
-            data = [posts async for posts in SaleProfiles.objects.all().order_by('-id')[:10]] 
+            if request.GET.get('type') != "advisor":
+                data = [posts async for posts in SaleProfiles.objects.all().order_by('-id')[:10]] 
+            else:
+                data = [posts async for posts in Profile.objects.all().order_by('-id')[:10]] 
         serialized_data = await serialize_data(data, serial)
         return Response(serialized_data)
 
