@@ -270,6 +270,7 @@ class Notification(models.Model):
     image = models.FileField(storage=MediaStorage(),upload_to='notification/image',null=True,blank=True)
     url = models.URLField(max_length=200,null=True,blank=True)
     created_on = models.DateField(auto_now=True)
+    read_status = models.JSONField(default=dict)
 
 # For Popular searched items and recently Searched items
 class Activity(models.Model):

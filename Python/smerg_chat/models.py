@@ -8,6 +8,8 @@ class Room(models.Model):
     last_msg = models.TextField(null=True, blank=True, db_collation='utf8mb4_unicode_ci')
     updated = models.DateTimeField(auto_now=True)
     created_date = models.DateTimeField(auto_now=True)
+    unread_messages_first = models.IntegerField(default=0)
+    unread_messages_second = models.IntegerField(default=0)
 
     class Meta:
         unique_together = ['first_person', 'second_person']
@@ -23,6 +25,7 @@ class ChatMessage(models.Model):
     attachment_size = models.CharField(default='', max_length=50)
     attachment_type = models.CharField(default='', max_length=50)
     timestamp = models.DateTimeField(auto_now_add=True)
+    seen = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Message from {self.sended_by} to {self.sended_to}..."

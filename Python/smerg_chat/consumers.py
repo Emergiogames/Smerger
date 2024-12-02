@@ -15,10 +15,9 @@ from .utils.noti_utils import *
 from datetime import datetime
 from django.utils import timezone
 from channels.layers import get_channel_layer
-from django.core.files.base import ContentFile, File
+from django.core.files.base import ContentFile
 from smerg_app.utils.check_utils import *
-from django.conf import settings
-from PIL import Image
+from django.db.models import Q
 
 class ChatConsumer(AsyncWebsocketConsumer):
     # Connecting WS
@@ -31,6 +30,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
         exists, self.user = await check_user(token)
         self.chatroom = f'user_chatroom_{id}'
+        await ChatMessage.objects.filter(sended_to=self.user, seen=False).aupdate(seen=True)
+        await Room.objects.filter(id=id, first_person=self.user).aupdate(unread_messages_first=0)
+        await Room.objects.filter(id=id, second_person=self.user).aupdate(unread_messages_second=0)
         await self.channel_layer.group_add(self.chatroom, self.channel_name)
         await self.accept()
 
@@ -57,7 +59,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'sendedTo': recieved,
             'duration': data.get('duration') if data.get('duration') else None,
             'sendedBy': self.user.id,
-            'time': str(created)
+            'time': str(created),
+            'seen':self.chat.seen
         }
 
         ## Send Message
@@ -72,7 +75,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         ## Update Room Data
         await self.channel_layer.group_send(
-            'room_updates',
+            f'user_{self.user.id}',
+            {
+                'type': 'room_message',
+                'room_data': room_data
+            }
+        )
+
+        room_data['total_second'] = await Room.objects.filter(second_person__id=recieved, unread_messages_first__gt=0).acount()
+        room_data['total_first'] = await Room.objects.filter(first_person__id=recieved, unread_messages_second__gt=0).acount()
+        await self.channel_layer.group_send(
+            f'user_{recieved}',
             {
                 'type': 'room_message',
                 'room_data': room_data
@@ -92,32 +105,45 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @sync_to_async
     def save_message(self, roomId, token, msg, audio, time, duration, attachment):
         room = Room.objects.get(id=roomId)
-        recieved = room.second_person if self.user.id == room.first_person.id else room.first_person
-        chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(msg))
+        if self.user == room.first_person:
+            recieved = room.second_person
+            room.unread_messages_second += 1
+        else:
+            recieved = room.first_person
+            room.unread_messages_first += 1
+        seen = True if self.user == recieved else False
+        message = "🎙️ Voice message" if audio else "📄 Attachment" if attachment else msg
+        self.chat = ChatMessage.objects.create(sended_by=self.user, sended_to=recieved, room=room, message=encrypt_message(message), seen=seen)
         room.last_msg = encrypt_message(msg)
         
         if audio:
             filename = f'audio_{self.user.username}_{time}.m4a'
             decoded_audio = base64.b64decode(audio)
             audio_file = ContentFile(decoded_audio, name=filename)
-            chat.audio.save(filename, audio_file, save=True)
-            chat.duration = duration
-            room.last_msg = encrypt_message("Voice message")
-        if attachment:
+            self.chat.audio.save(filename, audio_file, save=True)
+            self.chat.duration = duration
+            room.last_msg = encrypt_message("🎙️ Voice message")
+        elif attachment:
             attachment_dict = json.loads(attachment)
             base64_data = attachment_dict['data']
             decoded_attachment = base64.b64decode(base64_data)
             image_type = attachment_dict['fileExtension']
             filename = f'attachment_{self.user.username}_{time}{image_type}'
             attachment_file = ContentFile(decoded_attachment, name=filename)
-            chat.attachment.save(filename, attachment_file, save=True)
-            chat.attachment_size = attachment_dict['size']
-            chat.attachment_type = attachment_dict['type']
-            room.last_msg = encrypt_message("Attachment")
-        chat.save()
-        print(chat)
+            self.chat.attachment.save(filename, attachment_file, save=True)
+            self.chat.attachment_size = attachment_dict['size']
+            self.chat.attachment_type = attachment_dict['type']
+            room.last_msg = encrypt_message("📄 Attachment")
+        self.chat.save()
+        print(self.chat)
         room.updated = datetime.now()
         room.save()
+        if room.first_person == self.user:
+            unread = room.unread_messages_second
+        else:
+            unread = room.unread_messages_first
+        total_second = Room.objects.filter(second_person=self.user, unread_messages_first__gt=0).count()
+        total_first = Room.objects.filter(first_person=self.user, unread_messages_second__gt=0).count()
         room_data = {
             'id': room.id,
             'first_person': room.first_person.id,
@@ -130,22 +156,37 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S'),
             'active': recieved.is_active,
             'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
-            'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S')
+            "unread_messages": unread,
+            "total_unread": total_second + total_first
         }
-        return recieved.id, chat.timestamp, room_data, chat
+        print(room_data)
+        return recieved.id, self.chat.timestamp, room_data, self.chat
 
 class RoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         token = self.scope['query_string'].decode().split('=')[-1]
-        exists, user_result = await check_user(token)
-        self.user = user_result
+        exists, self.user = await check_user(token)
         self.user.active_from = timezone.now()
         self.user.is_active = True
         await self.user.asave()
         print('Connected')
-        self.room_group_name = 'room_updates'
+        self.room_group_name =  f'user_{self.user.id}'
         await self.channel_layer.group_add(self.room_group_name,self.channel_name)
         await self.accept()
+        total_second = await Room.objects.filter(second_person=self.user, unread_messages_second__gt=0).acount()
+        total_first = await Room.objects.filter(first_person=self.user, unread_messages_first__gt=0).acount()
+        room_data = {
+            "total_unread": total_first + total_second,
+            "total_noti": await Notification.objects.filter(user=self.user).acount()
+        }
+        print(f"For User {self.user} room_data is {room_data} with {total_first} & {total_second}")
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'room_message',
+                'room_data': room_data
+            }
+        )
 
     async def disconnect(self, close_code):
         self.user.is_active = False

@@ -684,8 +684,8 @@ class Testimonials(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                if request.GET.get('userId'):
-                    user = await UserProfile.objects.aget(id=request.GET.get('userId'))
+                # if request.GET.get('userId'):
+                #     user = await UserProfile.objects.aget(id=request.GET.get('userId'))
                 tests = [test async for test in Testimonial.objects.filter(user=user).order_by('-id')]
                 serialized_data = await serialize_data(tests, TestSerial)
                 return Response(serialized_data)
@@ -850,7 +850,10 @@ class Plans(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                plan = [plans async for plans in Plan.objects.filter(type=request.GET.get('type')).order_by('-id')]
+                if request.GET.get('type'):
+                    plan = [plans async for plans in Plan.objects.filter(type=request.GET.get('type')).order_by('-id')]
+                else:
+                    plan = [plans async for plans in Plan.objects.all().order_by('-id')]
                 serialized_data = await serialize_data(plan, PlanSerial)
                 return Response(serialized_data)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
@@ -864,16 +867,20 @@ class Subscribe(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                if await Subscription.objects.filter(user=user, plan__type=request.GET.get('type')).aexists():
-                    subscription = await Subscription.objects.aget(user=user, plan__type=request.GET.get('type'))
-                    remaining_posts = await sync_to_async(lambda: subscription.remaining_posts)()
-                    expiry_date = await sync_to_async(lambda: subscription.expiry_date)()
-                    if subscription.remaining_posts != 0 and subscription.expiry_date >= timezone.now().date():
-                        plan = await sync_to_async(lambda: subscription.plan)()
-                        plan_data = await sync_to_async(lambda: PlanSerial(plan).data)()
-                        plan_id = await sync_to_async(lambda: subscription.plan.id)()
-                        return Response({'status':True, 'id':plan_id, 'posts':remaining_posts, "expiry":expiry_date, 'plan':plan_data})
-                return Response({'status':False,'message': 'Subscription doesnot exist'}, status=status.HTTP_404_NOT_FOUND)
+                if request.GET.get('type'):
+                    if await Subscription.objects.filter(user=user, plan__type=request.GET.get('type')).aexists():
+                        subscription = await Subscription.objects.aget(user=user, plan__type=request.GET.get('type'))
+                        remaining_posts = await sync_to_async(lambda: subscription.remaining_posts)()
+                        expiry_date = await sync_to_async(lambda: subscription.expiry_date)()
+                        if subscription.remaining_posts != 0 and subscription.expiry_date >= timezone.now().date():
+                            plan = await sync_to_async(lambda: subscription.plan)()
+                            plan_data = await sync_to_async(lambda: PlanSerial(plan).data)()
+                            plan_id = await sync_to_async(lambda: subscription.plan.id)()
+                            return Response({'status':True, 'id':plan_id, 'posts':remaining_posts, "expiry":expiry_date, 'plan':plan_data})
+                    return Response({'status':False,'message': 'Subscription doesnot exist'}, status=status.HTTP_404_NOT_FOUND)
+                else:
+                    if await Subscription.objects.filter(user=user).aexists():
+                        return Response({'status':True})
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -885,14 +892,9 @@ class Subscribe(APIView):
             if exists:
                 # verified, payment_details = await verify_payment(request.data.get('transaction_id'))
                 # if verified:
-                # subscribed = await check_subscription(user)
                 if await Plan.objects.filter(id=request.data.get('id')).aexists():
                     plan = await Plan.objects.aget(id=request.data.get('id'))
                     if not await Subscription.objects.filter(user=user).aexists():
-                        # request.data['user'] = user.id
-                        # request.data['expiry_date'] = (timezone.now() + relativedelta(months=plan.time_period)).strftime('%Y-%m-%d')
-                        # request.data['remaining_posts'] = plan.post_number
-                        # request.data['plan'] = plan.id
                         data = request.data
                         data['user'] = user.id
                         data['expiry_date'] = (timezone.now() + relativedelta(months=plan.time_period)).strftime('%Y-%m-%d')
@@ -922,18 +924,18 @@ class Featured(APIView):
         data = []
         if request.GET.get('type'):
             if request.GET.get('type') != "advisor":
-                product = SaleProfiles.objects.filter(entity_type=request.GET.get('type'))
+                product = SaleProfiles.objects.filter(entity_type=request.GET.get('type')).order_by('-id')
                 serial = SaleProfilesSerial
             else:
-                product = Profile.objects.filter(type = "advisor")
+                product = Profile.objects.filter(type="advisor").order_by('-id')
                 serial = ProfileSerial
         else:
             product = SaleProfiles.objects.all()
             serial = SaleProfilesSerial
-        async for i in product.order_by('-id'):
+        async for i in product:
             user_id = await sync_to_async(lambda: i.user)()
-            if await Subscription.objects.filter(user=user_id).aexists():
-                subscribed = await Subscription.objects.aget(user=user_id)
+            if await Subscription.objects.filter(user=user_id, plan__type=request.GET.get('type')).aexists():
+                subscribed = await Subscription.objects.aget(user=user_id, plan__type=request.GET.get('type'))
                 plan_id = await sync_to_async(lambda: subscribed.plan.id)()
                 plan = await Plan.objects.aget(id = plan_id)
                 if plan.feature:
@@ -1178,7 +1180,7 @@ class RecentEnquiries(APIView):
                     if user_posts:
                         async for room in Room.objects.filter(Q(first_person=user) | Q(second_person=user)).order_by('-created_date')[:5]:
                             if await ChatMessage.objects.filter(room=room).aexists():
-                                other_person = room.second_person if room.first_person == user else room.first_person
+                                other_person = await sync_to_async(lambda: room.second_person if room.first_person == user else room.first_person)()
                                 enquiry_info = { 'other_person': other_person.username,'created_date': room.created_date}
                                 return Response({'status': True, 'recent_enquiries': enquiry_info}, status=status.HTTP_200_OK)
                     return Response({'status': False, 'message': 'User has not added any posts in the requested type'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -1222,8 +1224,12 @@ class FilterPosts(APIView):
                         query &= Q(city__icontains=request.GET.get('city'))
                     if request.GET.get('industry'):
                         query &= Q(industry__icontains=request.GET.get('industry'))
+                    if request.GET.get('entity'):
+                        query &= Q(entity__icontains=request.GET.get('entity'))
                     if request.GET.get('ebitda'):
                         query &= Q(ebitda__range=(0, request.GET.get('ebitda')))
+                    if request.GET.get('year_starting') and request.GET.get('year_ending'):
+                        query &= Q(establish_yr__range=(request.GET.get('year_starting'), request.GET.get('year_ending')))
                     if request.GET.get('range_starting') and request.GET.get('range_ending'):
                         query &= Q(range_starting__gte=float(request.GET.get('range_starting'))) & Q(range_ending__lte=float(request.GET.get('range_ending')))
                     search = [posts async for posts in SaleProfiles.objects.filter(query)]
