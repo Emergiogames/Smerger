@@ -159,7 +159,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
         self.user.is_active = True
         await self.user.asave()
         print('Connected')
-        self.user_group_name = f'user_{self.user.id}'
+        self.room_group_name =  f'user_{self.user.id}'
         await self.channel_layer.group_add(self.room_group_name,self.channel_name)
         await self.accept()
         total_second = await Room.objects.filter(second_person=self.user, unread_messages_second__gt=0).acount()
@@ -170,7 +170,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
         }
         print(f"For User {self.user} room_data is {room_data} with {total_first} & {total_second}")
         await self.channel_layer.group_send(
-            'room_updates',
+            self.room_group_name,
             {
                 'type': 'room_message',
                 'room_data': room_data
