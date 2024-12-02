@@ -19,7 +19,7 @@ class Rooms(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                rooms = [room async for room in Room.objects.filter(Q(first_person=user) | Q(second_person=user)).order_by('-id')] 
+                rooms = [room async for room in Room.objects.filter(Q(first_person=user) | Q(second_person=user)).order_by('-updated')] 
                 serialized_data = await serialize_data(rooms, RoomSerial)
                 return Response(serialized_data)
             return Response({'status':False,'message': 'User doesnot exist'})
