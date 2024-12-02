@@ -39,7 +39,7 @@ class Rooms(APIView):
                 if recieved_image:
                     image = recieved_image.url 
                 else: 
-                    None
+                    image = None
                 if await Room.objects.filter(Q(first_person=user, second_person=recieved_user) | Q(second_person=user, first_person=recieved_user)).aexists():
                     room = await Room.objects.aget(Q(first_person=user, second_person=recieved_user) | Q(second_person=user, first_person=recieved_user))
                     room_id = await sync_to_async(lambda: room.id)()
