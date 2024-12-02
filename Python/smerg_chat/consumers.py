@@ -129,10 +129,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         room.save()
         if room.first_person == self.user:
             unread = room.unread_messages_second
-            total = Room.objects.filter(first_person=self.user, unread_messages_second__gt=0).count()
         else:
             unread = room.unread_messages_first
-            total = Room.objects.filter(second_person=self.user, unread_messages_first__gt=0).count()
+        total_second = Room.objects.filter(second_person=self.user, unread_messages_second__gt=0).count()
+        total_first = Room.objects.filter(first_person=self.user, unread_messages_first__gt=0).count()
         room_data = {
             'id': room.id,
             'first_person': room.first_person.id,
@@ -147,7 +147,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
             'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S'),
             "unread_messages": unread,
-            "total_unread": total
+            "total_unread": total_second + total_first
         }
         print(room_data)
         return recieved.id, self.chat.timestamp, room_data, self.chat
