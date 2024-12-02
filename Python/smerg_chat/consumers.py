@@ -75,7 +75,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         ## Update Room Data
         await self.channel_layer.group_send(
-            'room_updates',
+            f'user_{self.user.id}',
             {
                 'type': 'room_message',
                 'room_data': room_data
