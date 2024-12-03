@@ -206,8 +206,7 @@ STORAGES = {
             "bucket_name": config('AWS_STORAGE_BUCKET_NAME'),
             "location": "media/",
             "default_acl": "private",
-            "file_overwrite": False,
-            "server_side_encryption": 'AES256'
+            "file_overwrite": False
         }
     },
     "staticfiles": {
@@ -215,8 +214,7 @@ STORAGES = {
         "OPTIONS": {
             "bucket_name": config('AWS_STORAGE_BUCKET_NAME'),
             "location": "static/",
-            "default_acl": "private",
-            "server_side_encryption": 'AES256'
+            "default_acl": "private"
         }
     }
 }
