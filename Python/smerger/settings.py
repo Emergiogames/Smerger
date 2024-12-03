@@ -196,6 +196,32 @@ AWS_S3_USE_SSL = True
 AWS_S3_VERIFY = True
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_QUERYSTRING_AUTH = False
+AWS_S3_ENCRYPTION = True
+AWS_S3_SERVER_SIDE_ENCRYPTION = 'AES256'
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "OPTIONS": {
+            "bucket_name": "AWS_STORAGE_BUCKET_NAME",
+            "location": "media/",
+            "default_acl": "private",
+            "file_overwrite": False,
+            "encryption": True,
+            "server_side_encryption": 'AES256'
+        }
+    },
+    "staticfiles": {
+        "BACKEND": "storages.backends.s3boto3.S3StaticStorage",
+        "OPTIONS": {
+            "bucket_name": "AWS_STORAGE_BUCKET_NAME",
+            "location": "static/",
+            "default_acl": "private",
+            "encryption": True,
+            "server_side_encryption": 'AES256'
+        }
+    }
+}
 
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
