@@ -203,7 +203,7 @@ STORAGES = {
     "default": {
         "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
         "OPTIONS": {
-            "bucket_name": "AWS_STORAGE_BUCKET_NAME",
+            "bucket_name": config('AWS_STORAGE_BUCKET_NAME'),
             "location": "media/",
             "default_acl": "private",
             "file_overwrite": False,
@@ -214,7 +214,7 @@ STORAGES = {
     "staticfiles": {
         "BACKEND": "storages.backends.s3boto3.S3StaticStorage",
         "OPTIONS": {
-            "bucket_name": "AWS_STORAGE_BUCKET_NAME",
+            "bucket_name": config('AWS_STORAGE_BUCKET_NAME'),
             "location": "static/",
             "default_acl": "private",
             "encryption": True,
