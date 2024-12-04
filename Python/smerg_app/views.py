@@ -818,7 +818,7 @@ class Recommended(APIView):
                             query &= Q(entity_type=request.GET.get('type'), verified=True)
                         products = [posts async for posts in SaleProfiles.objects.filter(query).order_by('-id')]
                         serialized_data = await serialize_data(products, SaleProfilesSerial)
-                    else if request.GET.get('type') == "advisor":
+                    elif request.GET.get('type') == "advisor":
                         query &= Q(type="advisor")
                         products = [posts async for posts in Profile.objects.filter(query).order_by('-id')]
                         serialized_data = await serialize_data(products, ProfileSerial)
