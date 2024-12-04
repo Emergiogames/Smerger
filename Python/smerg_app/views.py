@@ -974,10 +974,12 @@ class Notifications(APIView):
         return Response({'status':False, 'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
     async def mark_notifications_read(self, notifications, user):
+        print("WORING!!!>>>>")
         await asyncio.sleep(20)
 
         @sync_to_async
         def update_notification(notification, user):
+            print("WORING 2 !!!>>>>")
             notification.read_by.add(user)
 
         for notification in notifications:
