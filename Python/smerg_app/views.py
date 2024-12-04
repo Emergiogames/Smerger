@@ -259,7 +259,7 @@ class BusinessList(APIView):
                 if id == 0:
                     businesses = [posts async for posts in SaleProfiles.objects.filter(entity_type='business', block=False, verified=True).order_by('-id')]
                 else:
-                    businesses = [posts async for posts in SaleProfiles.objects.filter(entity_type='business', user=user, block=False, verified=True).order_by('-id')]
+                    businesses = [posts async for posts in SaleProfiles.objects.filter(entity_type='business', user=user, block=False).order_by('-id')]
                 serialized_data = await serialize_data(businesses, SaleProfilesSerial)
                 return Response(serialized_data)
             return Response({'status': False, 'message': 'User does not exist'}, status=status.HTTP_400_BAD_REQUEST)
@@ -333,7 +333,7 @@ class InvestorList(APIView):
                 if id == 0:
                     investor = [posts async for posts in SaleProfiles.objects.filter(entity_type='investor', block=False, verified=True).order_by('-id')]
                 else:
-                    investor = [posts async for posts in SaleProfiles.objects.filter(entity_type='investor', user=user, block=False, verified=True).order_by('-id')]
+                    investor = [posts async for posts in SaleProfiles.objects.filter(entity_type='investor', user=user, block=False).order_by('-id')]
                 serialized_data = await serialize_data(investor, SaleProfilesSerial)
                 return Response(serialized_data)
             return Response({'status': False, 'message': 'User does not exist'}, status=status.HTTP_400_BAD_REQUEST)
@@ -408,7 +408,7 @@ class FranchiseList(APIView):
                 if id == 0:
                     businesses = [posts async for posts in SaleProfiles.objects.filter(entity_type='franchise', block=False, verified=True).order_by('-id')]
                 else:
-                    businesses = [posts async for posts in SaleProfiles.objects.filter(entity_type='franchise', user=user, block=False, verified=True).order_by('-id')]
+                    businesses = [posts async for posts in SaleProfiles.objects.filter(entity_type='franchise', user=user, block=False).order_by('-id')]
                 serialized_data = await serialize_data(businesses, SaleProfilesSerial)
                 return Response(serialized_data)
             return Response({'status': False, 'message': 'User does not exist'}, status=status.HTTP_400_BAD_REQUEST)
