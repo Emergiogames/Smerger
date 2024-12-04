@@ -804,8 +804,8 @@ class Recommended(APIView):
                 if preference:
                     preference = await Preference.objects.aget(user = user)
                     query = Q()
-                    # if preference.industries:
-                    #     query |= Q(industry__in=preference.industries)
+                    if preference.industries:
+                        query |= Q(industry__in=preference.industries)
                     # if not request.GET.get('type') and preference.profile:
                     #     query |= Q(entity_type__in=preference.profile)
                     if request.GET.get('type') != "advisor":
