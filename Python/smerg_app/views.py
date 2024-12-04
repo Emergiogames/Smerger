@@ -213,9 +213,16 @@ class Profiles(APIView):
                 subscription = await Subscription.objects.filter(user=user, plan__type=request.data.get('type')).aexists()
                 if not profile_exist and subscription:
                     data = request.data
-                    data['user'] = user.id 
+                    data['user'] = user.id
+                    if await AadhaarDetails.objects.filter(user=user).aexists():
+                        details = await AadhaarDetails.objects.aget(user=user)
+                        name = await sync_to_async(lambda: details.name)()
+                        if data["name"].lower() != name.lower():
+                            return Response({'status': False, 'message': 'Data not matching'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
                     saved, resp = await create_serial(ProfileSerial, data)
                     if saved:
+                        if not await AadhaarDetails.objects.filter(user=user).aexists():
+                            return Response({'status': True, 'message': 'Profile created successfully but aadhar details not found'}, status=status.HTTP_206_PARTIAL_CONTENT)
                         return Response({'status': True, 'message': 'Profile created successfully'}, status=status.HTTP_201_CREATED)
                     return Response(resp)
                 return Response({'status': False, 'message': 'Subscription with specified plan type does not exist'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -987,12 +994,10 @@ class Notifications(APIView):
         return Response({'status':False, 'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
     async def mark_notifications_read(self, notifications, user):
-        print("WORING!!!>>>>")
         await asyncio.sleep(20)
 
         @sync_to_async
         def update_notification(notification, user):
-            print("WORING 2 !!!>>>>")
             notification.read_by.add(user)
 
         for notification in notifications:
@@ -1261,5 +1266,28 @@ class FilterPosts(APIView):
                     serialized_data = await serialize_data(search, SaleProfilesSerial)
                     return Response({'status':True,'data':serialized_data}, status=status.HTTP_200_OK)
                 return Response({'status':False,'message': 'Entity type not passed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
+
+# Aadhaar Details
+class AadharInfo(models.model):
+    @swagger_auto_schema(operation_description="save aadhar data",request_body=AadhaarSerial,
+    responses={200: "{'status':True,'message': 'saved successfully'}",400:"Passes an error message"})
+    async def post(self, request):
+        if request.headers.get('token'):
+            exists, user = await check_user(request.headers.get('token'))
+            if exists:
+                data = request.data
+                data['user'] = user.id
+                if not await AadhaarDetails.objects.filter(user=user).aexists():
+                    saved, resp = await create_serial(AadhaarSerial, data)
+                    if saved:
+                        aadhar_name = saved.name
+                # profile = await Profile.objects.select_related('user').filter(user=user).order_by('-created_at').aget()
+                profile = await Profile.objects.aget(user=user)
+                if profile.name.lower() != aadhar_name.lower():
+                    await profile.adelete()
+                    return Response({'status': False, 'message': 'Data not matching'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+                return Response({'status': True, 'message': 'Aadhaar data saved successfully'}, status=status.HTTP_201_CREATED)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)

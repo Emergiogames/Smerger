@@ -37,6 +37,7 @@ class UserProfile(AbstractUser):
     inactive_from = models.DateTimeField(null=True, blank=True)
     deactivate = models.BooleanField(default=False)
     deactivated_on = models.DateField(null=True, blank=True)
+    aadhar_verified = models.BooleanField(default=False)
 
     objects = CustomUserManager()
 
@@ -325,3 +326,13 @@ class UserSession(models.Model):
         
     def __str__(self):
         return f"{self.user} - {self.session_duration}s"
+
+class AadhaarDetails(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True)
+    name = models.CharField(max_length=50)
+    number = models.CharField(max_length=50)
+    email = models.CharField(max_length=50)
+    dob = models.CharField(max_length=50)
+    gender = models.CharField(max_length=50)
+    address = models.JSONField(null=True, blank=True)
+    profile_image = models.ImageField(upload_to="aadhaar/image", null=True, blank=True)

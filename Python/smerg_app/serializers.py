@@ -100,3 +100,8 @@ class ReportSerial(serializers.ModelSerializer):
     class Meta:
         model = Report
         fields = '__all__'
+
+class AadhaarSerial(serializers.ModelSerializer):
+    class Meta:
+        model = AadhaarDetails
+        fields = '__all__'
