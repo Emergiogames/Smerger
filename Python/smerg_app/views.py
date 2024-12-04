@@ -312,10 +312,11 @@ class BusinessList(APIView):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
                 if id == 0:
-                    profiles = [profile async for profile in SaleProfiles.objects.filter(user=user, entity_type='business')]
+                    async for profile in SaleProfiles.objects.filter(user=user, entity_type='business'):
+                        await profile.adelete()
                 else:
                     profiles = await SaleProfiles.objects.aget(id=id)
-                await profiles.adelete()
+                    await profiles.adelete()
                 return Response({'status':True}, status=status.HTTP_200_OK)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -387,10 +388,11 @@ class InvestorList(APIView):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
                 if id == 0:
-                    profiles = [profile async for profile in SaleProfiles.objects.filter(user=user, entity_type='investor')]
+                    async for profile in SaleProfiles.objects.filter(user=user, entity_type='investor'):
+                        await profile.adelete()
                 else:
                     profiles = await SaleProfiles.objects.aget(id=id)
-                await profiles.adelete()
+                    await profiles.adelete()
                 return Response({'status':True}, status=status.HTTP_200_OK)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -462,7 +464,8 @@ class FranchiseList(APIView):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
                 if id == 0:
-                    profiles = [profile async for profile in SaleProfiles.objects.filter(user=user, entity_type='franchise')]
+                    async for profile in SaleProfiles.objects.filter(user=user, entity_type='franchise'):
+                        await profile.adelete()
                 else:
                     profiles = await SaleProfiles.objects.aget(id=id)
                 await profiles.adelete()
