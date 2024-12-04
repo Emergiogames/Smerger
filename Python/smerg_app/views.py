@@ -1082,7 +1082,7 @@ class Popularsearch(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                if await SaleProfiles.objects.filter(id=request.data.get('post_id')).aexists():
+                if await SaleProfiles.objects.filter(id=request.data.get('post_id'), verified=True).aexists():
                     post = await SaleProfiles.objects.aget(id=request.data.get('post_id'))
                     if not await Activity.objects.filter(post=post).aexists():
                         created = await Activity.objects.acreate(post=post,count=1)
