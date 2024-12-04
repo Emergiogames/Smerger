@@ -1270,7 +1270,7 @@ class FilterPosts(APIView):
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
 # Aadhaar Details
-class AadharInfo(models.model):
+class AadharInfo(APIView):
     @swagger_auto_schema(operation_description="save aadhar data",request_body=AadhaarSerial,
     responses={200: "{'status':True,'message': 'saved successfully'}",400:"Passes an error message"})
     async def post(self, request):
