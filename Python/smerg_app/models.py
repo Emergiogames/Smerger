@@ -37,7 +37,7 @@ class UserProfile(AbstractUser):
     inactive_from = models.DateTimeField(null=True, blank=True)
     deactivate = models.BooleanField(default=False)
     deactivated_on = models.DateField(null=True, blank=True)
-    aadhar_verified = models.BooleanField(default=False)
+    # aadhar_verified = models.BooleanField(default=False)
 
     objects = CustomUserManager()
 
