@@ -41,7 +41,7 @@ class LoginView(APIView):
         exists, user = await check_exists(request.data.get('phone'))
         if exists:
             if check_password(request.data.get('password'), user.password):
-                if not user.block or not user.deactivate:
+                if not user.block and not user.deactivate:
                         token = await Token.objects.aget(user=user)
                         return Response({'status':True, 'token':token.key}, status=status.HTTP_200_OK)
                 return Response({'status':False,'message': 'User Blocked/ Account deactivated'}, status=status.HTTP_403_FORBIDDEN)
@@ -55,8 +55,7 @@ class Social(APIView):
     async def post(self,request):
         exists, user = await check_email(request.data.get('username'))
         if exists:
-            print(f"User is {user} {user.deactivate}")
-            if not user.block or not user.deactivate:
+            if not user.block and not user.deactivate:
                 token = await Token.objects.aget(user=user)
                 return Response({'status':True,'token':token.key}, status=status.HTTP_200_OK)
             return Response({'status':False,'message': 'User Blocked/ Account deactivated'}, status=status.HTTP_403_FORBIDDEN)
