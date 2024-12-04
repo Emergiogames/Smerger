@@ -55,6 +55,7 @@ class Social(APIView):
     async def post(self,request):
         exists, user = await check_email(request.data.get('username'))
         if exists:
+            print(f"User is {user}")
             if not user.block or not user.deactivate:
                 token = await Token.objects.aget(user=user)
                 return Response({'status':True,'token':token.key}, status=status.HTTP_200_OK)
