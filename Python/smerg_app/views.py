@@ -40,10 +40,10 @@ class LoginView(APIView):
         exists, user = await check_exists(request.data.get('phone'))
         if exists:
             if check_password(request.data.get('password'), user.password):
-                if not user.block:
-                    token = await Token.objects.aget(user=user)
-                    return Response({'status':True, 'token':token.key}, status=status.HTTP_200_OK)
-                return Response({'status':False,'message': 'User Blocked'}, status=status.HTTP_403_FORBIDDEN)
+                if not user.block or not user.deactivate:
+                        token = await Token.objects.aget(user=user)
+                        return Response({'status':True, 'token':token.key}, status=status.HTTP_200_OK)
+                return Response({'status':False,'message': 'User Blocked/ Account deactivated'}, status=status.HTTP_403_FORBIDDEN)
         return Response({'status':False,'message': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
 # Social Implementation for verifying login
@@ -514,7 +514,9 @@ class UserView(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                await user.adelete()
+                user.deactivate = True
+                user.deactivated_on = datetime.now().date()
+                await user.asave()
                 return Response({'status':True}, status=status.HTTP_200_OK)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)

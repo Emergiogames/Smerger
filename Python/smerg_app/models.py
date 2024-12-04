@@ -35,6 +35,8 @@ class UserProfile(AbstractUser):
     total_hr_spend = models.FloatField(default=0.0)
     active_from = models.DateTimeField(null=True, blank=True)
     inactive_from = models.DateTimeField(null=True, blank=True)
+    deactivate = models.BooleanField(default=False)
+    deactivated_on = models.DateField(null=True, blank=True)
 
     objects = CustomUserManager()
 
