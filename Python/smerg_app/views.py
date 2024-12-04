@@ -813,12 +813,12 @@ class Recommended(APIView):
                             query |= Q(range_starting__gte=preference.price_starting)
                         if preference.price_starting is not None:
                             query |= Q(range_ending__lte=preference.price_ending)
-                    query &= Q(entity_type=request.GET.get('type')) if request.GET.get('type') != "advisor" else Q(type="advisor")
                     if request.GET.get('type') != "advisor":
-                        query &= Q(verified=True)
+                        query &= Q(entity_type=request.GET.get('type')) & Q(verified=True)
                         products = [posts async for posts in SaleProfiles.objects.filter(query).order_by('-id')]
                         serialized_data = await serialize_data(products, SaleProfilesSerial)
                     else:
+                        query &= Q(type="advisor")
                         products = [posts async for posts in Profile.objects.filter(query).order_by('-id')]
                         serialized_data = await serialize_data(products, ProfileSerial)
                 else:
@@ -1083,7 +1083,7 @@ class Popularsearch(APIView):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
                 if await SaleProfiles.objects.filter(id=request.data.get('post_id'), verified=True).aexists():
-                    post = await SaleProfiles.objects.aget(id=request.data.get('post_id'))
+                    post = await SaleProfiles.objects.aget(id=request.data.get('post_id'), verified=True)
                     if not await Activity.objects.filter(post=post).aexists():
                         created = await Activity.objects.acreate(post=post,count=1)
                     else:
