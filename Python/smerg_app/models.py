@@ -330,9 +330,9 @@ class UserSession(models.Model):
 class AadhaarDetails(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=50)
-    number = models.CharField(max_length=50)
-    email = models.CharField(max_length=50)
-    dob = models.CharField(max_length=50)
-    gender = models.CharField(max_length=50)
+    number = models.CharField(max_length=50, null=True, blank=True)
+    email = models.CharField(max_length=50, null=True, blank=True)
+    dob = models.CharField(max_length=50, null=True, blank=True)
+    gender = models.CharField(max_length=50, null=True, blank=True)
     address = models.JSONField(null=True, blank=True)
     profile_image = models.ImageField(upload_to="aadhaar/image", null=True, blank=True)
