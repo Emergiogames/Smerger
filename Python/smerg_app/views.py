@@ -468,7 +468,7 @@ class FranchiseList(APIView):
                         await profile.adelete()
                 else:
                     profiles = await SaleProfiles.objects.aget(id=id)
-                await profiles.adelete()
+                    await profiles.adelete()
                 return Response({'status':True}, status=status.HTTP_200_OK)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
