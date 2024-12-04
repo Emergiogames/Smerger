@@ -806,17 +806,17 @@ class Recommended(APIView):
                     query = Q()
                     if preference.industries:
                         query |= Q(industry__in=preference.industries)
-                    # if not request.GET.get('type') and preference.profile:
-                    #     query |= Q(entity_type__in=preference.profile)
+                    if not request.GET.get('type') and preference.profile:
+                        query |= Q(entity_type__in=preference.profile)
                     if request.GET.get('type') != "advisor":
                         if preference.price_starting is not None:
                             query |= Q(range_starting__gte=preference.price_starting)
                         if preference.price_starting is not None:
                             query |= Q(range_ending__lte=preference.price_ending)
-                    if request.GET.get('type') or request.GET.get('type') != "advisor" or not request.GET.get('type'):
+                    if request.GET.get('type') or request.GET.get('type') != "advisor":
                         print("WORKING...!")
-                        if request.GET.get('type') != "advisor":
-                            query &= Q(entity_type=request.GET.get('type'), verified=True)
+                        # if request.GET.get('type') != "advisor":
+                        #     query &= Q(entity_type=request.GET.get('type'), verified=True)
                         products = [posts async for posts in SaleProfiles.objects.filter(query).order_by('-id')]
                         serialized_data = await serialize_data(products, SaleProfilesSerial)
                     elif request.GET.get('type') == "advisor":
