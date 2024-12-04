@@ -243,8 +243,8 @@ class Profiles(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                profiles = await Profile.objects.aget(id=id)
-                await SaleProfiles.objects.filter(user = user, entity_type=profile.type).adelete()
+                profiles = await Profile.objects.aget(user=user, type=request.GET.get("business"))
+                await SaleProfiles.objects.filter(user = user, entity_type=profiles.type).adelete()
                 await profiles.adelete()
                 return Response({'status':True}, status=status.HTTP_200_OK)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
