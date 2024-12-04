@@ -1251,6 +1251,8 @@ class FilterPosts(APIView):
                         query &= Q(entity__icontains=request.GET.get('entity'))
                     if request.GET.get('ebitda'):
                         query &= Q(ebitda__range=(0, request.GET.get('ebitda')))
+                    if request.GET.get('preference'):
+                        query &= Q(preference__in=request.GET.get('preference'))
                     if request.GET.get('year_starting') and request.GET.get('year_ending'):
                         query &= Q(establish_yr__range=(request.GET.get('year_starting'), request.GET.get('year_ending')))
                     if request.GET.get('range_starting') and request.GET.get('range_ending'):
