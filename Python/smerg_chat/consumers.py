@@ -18,6 +18,7 @@ from channels.layers import get_channel_layer
 from django.core.files.base import ContentFile
 from smerg_app.utils.check_utils import *
 from django.db.models import Q
+from django.utils.timezone import localtime
 
 class ChatConsumer(AsyncWebsocketConsumer):
     # Connecting WS
@@ -33,6 +34,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await ChatMessage.objects.filter(sended_to=self.user, seen=False).aupdate(seen=True)
         await Room.objects.filter(id=id, first_person=self.user).aupdate(unread_messages_first=0)
         await Room.objects.filter(id=id, second_person=self.user).aupdate(unread_messages_second=0)
+
+        total_second = await Room.objects.filter(second_person=self.user, unread_messages_second__gt=0).acount()
+        total_first = await Room.objects.filter(first_person=self.user, unread_messages_first__gt=0).acount()
+        room_data = {
+            "total_unread": total_first + total_second,
+            "total_noti": await Notification.objects.filter(user=self.user).exclude(read_by=self.user).acount()
+        }
+        await self.channel_layer.group_send(
+            f'user_{self.user.id}',
+            {
+                'type': 'room_message',
+                'room_data': room_data
+            }
+        )
         await self.channel_layer.group_add(self.chatroom, self.channel_name)
         await self.accept()
 
@@ -82,8 +97,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         )
 
-        room_data['total_second'] = await Room.objects.filter(second_person__id=recieved, unread_messages_first__gt=0).acount()
-        room_data['total_first'] = await Room.objects.filter(first_person__id=recieved, unread_messages_second__gt=0).acount()
+        room_data['total_unread'] = await Room.objects.filter(second_person__id=recieved, unread_messages_second__gt=0).acount() + await Room.objects.filter(first_person__id=recieved, unread_messages_first__gt=0).acount()
         await self.channel_layer.group_send(
             f'user_{recieved}',
             {
@@ -142,8 +156,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             unread = room.unread_messages_second
         else:
             unread = room.unread_messages_first
-        total_second = Room.objects.filter(second_person=self.user, unread_messages_first__gt=0).count()
-        total_first = Room.objects.filter(first_person=self.user, unread_messages_second__gt=0).count()
+        total_second = Room.objects.filter(second_person=self.user, unread_messages_second__gt=0).count()
+        total_first = Room.objects.filter(first_person=self.user, unread_messages_first__gt=0).count()
         room_data = {
             'id': room.id,
             'first_person': room.first_person.id,
@@ -153,11 +167,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'second_name': room.second_person.first_name,
             'second_image': room.second_person.image.url if room.second_person.image else None,
             'last_msg': decrypt_message(room.last_msg) if room.last_msg else '',
-            'updated': room.updated.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated': localtime(room.updated).strftime('%Y-%m-%d %H:%M:%S'),
             'active': recieved.is_active,
             'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
             "unread_messages": unread,
-            "total_unread": total_second + total_first
+            "total_unread": total_second + total_first,
+            "total_noti": Notification.objects.filter(user=self.user).exclude(read_by=self.user).count()
         }
         print(room_data)
         return recieved.id, self.chat.timestamp, room_data, self.chat
@@ -177,7 +192,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
         total_first = await Room.objects.filter(first_person=self.user, unread_messages_first__gt=0).acount()
         room_data = {
             "total_unread": total_first + total_second,
-            "total_noti": await Notification.objects.filter(user=self.user).acount()
+            "total_noti": await Notification.objects.filter(user=self.user).exclude(read_by=self.user).acount()
         }
         print(f"For User {self.user} room_data is {room_data} with {total_first} & {total_second}")
         await self.channel_layer.group_send(

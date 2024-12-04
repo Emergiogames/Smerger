@@ -44,7 +44,7 @@ class Rooms(APIView):
                     room = await Room.objects.aget(Q(first_person=user, second_person=recieved_user) | Q(second_person=user, first_person=recieved_user))
                     room_id = await sync_to_async(lambda: room.id)()
                     return Response({'status':True, 'name': recieved_name, 'image':image, 'roomId': room_id})
-                room = await Room.objects.acreate(first_person=user, second_person=reciever, last_msg=encrypt_message("Tap to send message"))
+                room = await Room.objects.acreate(first_person=user, second_person=recieved_user, last_msg=encrypt_message("Tap to send message"))
                 return Response({'status':True,'name': recieved_name, 'image':image, 'roomId':room.id})
             return Response({'status':False,'message': 'User doesnot exist'})
         return Response({'status':False,'message': 'Token is not passed'})

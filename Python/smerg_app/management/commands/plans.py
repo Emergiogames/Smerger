@@ -15,3 +15,7 @@ class Command(BaseCommand):
         for i in Banner.objects.all():
             if i.validity_date == today:
                 i.delete()
+
+        for i in UserProfile.objects.filter(deactivate=True):
+            if i.deactivated_on == today:
+                i.delete()
