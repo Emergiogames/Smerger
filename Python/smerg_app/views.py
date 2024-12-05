@@ -1283,7 +1283,7 @@ class AadharInfo(APIView):
                 if not await AadhaarDetails.objects.filter(user=user).aexists():
                     saved, resp = await create_serial(AadhaarSerial, data)
                     if saved:
-                        aadhar_name = saved.name
+                        aadhar_name = resp.name
                 # profile = await Profile.objects.select_related('user').filter(user=user).order_by('-created_at').aget()
                 profile = await Profile.objects.aget(user=user)
                 if profile.name.lower() != aadhar_name.lower():
