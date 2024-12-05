@@ -1281,14 +1281,13 @@ class AadharInfo(APIView):
                 data = request.data
                 data['user'] = user.id
                 profile = data['profile_image']
-                data['profile_image'] = None
+                decoded_file = base64.b64decode(profile)
+                file = ContentFile(decoded_file, name=f"aadhar_profile_{user.username}.jpg")
+                data['profile_image'] = file
                 print(data)
                 if not await AadhaarDetails.objects.filter(user=user).aexists():
                     saved, resp = await create_serial(AadhaarSerial, data)
                     if saved:
-                        decoded_file = base64.b64decode(profile)
-                        file = ContentFile(decoded_file, name=f"aadhar_profile_{user.username}")
-                        resp.profile_image.save(f"aadhar_profile_{user.username}", file, save=True)
                         aadhar_name = resp.name
                 # profile = await Profile.objects.select_related('user').filter(user=user).order_by('-created_at').aget()
                 profile = await Profile.objects.aget(user=user)
