@@ -1280,9 +1280,11 @@ class AadharInfo(APIView):
             if exists:
                 data = request.data
                 data['user'] = user.id
+                print(data)
                 if not await AadhaarDetails.objects.filter(user=user).aexists():
                     saved, resp = await create_serial(AadhaarSerial, data)
                     if saved:
+                        print(resp.name)
                         aadhar_name = resp.name
                 # profile = await Profile.objects.select_related('user').filter(user=user).order_by('-created_at').aget()
                 profile = await Profile.objects.aget(user=user)
