@@ -37,7 +37,6 @@ class UserProfile(AbstractUser):
     inactive_from = models.DateTimeField(null=True, blank=True)
     deactivate = models.BooleanField(default=False)
     deactivated_on = models.DateField(null=True, blank=True)
-    # aadhar_verified = models.BooleanField(default=False)
 
     objects = CustomUserManager()
 
@@ -57,6 +56,7 @@ class Profile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     type = models.CharField(max_length=100)
+    aadhar_verified = models.BooleanField(default=False)
 
 # Business, Investor, Franchise posts
 class SaleProfiles(models.Model):

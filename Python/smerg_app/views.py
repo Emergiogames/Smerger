@@ -219,6 +219,7 @@ class Profiles(APIView):
                         name = await sync_to_async(lambda: details.name)()
                         if data["name"].lower() != name.lower():
                             return Response({'status': False, 'message': 'Data not matching'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+                        data['aadhar_verified'] = True
                     saved, resp = await create_serial(ProfileSerial, data)
                     if saved:
                         if not await AadhaarDetails.objects.filter(user=user).aexists():
@@ -250,7 +251,7 @@ class Profiles(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                profiles = await Profile.objects.aget(user=user, type=request.GET.get("business"))
+                profiles = await Profile.objects.aget(user=user, type=request.GET.get("type"))
                 await SaleProfiles.objects.filter(user = user, entity_type=profiles.type).adelete()
                 await profiles.adelete()
                 return Response({'status':True}, status=status.HTTP_200_OK)
@@ -1288,6 +1289,7 @@ class AadharInfo(APIView):
                 if profile.name.lower() != aadhar_name.lower():
                     await profile.adelete()
                     return Response({'status': False, 'message': 'Data not matching'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+                await Profile.objects.filter(user=user).aupdate(aadhar_verified=False)
                 return Response({'status': True, 'message': 'Aadhaar data saved successfully'}, status=status.HTTP_201_CREATED)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
