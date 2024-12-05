@@ -1280,8 +1280,10 @@ class AadharInfo(APIView):
             if exists:
                 data = request.data
                 data['user'] = user.id
+                data['profile_image'] = None
                 print(data)
                 if not await AadhaarDetails.objects.filter(user=user).aexists():
+                    print("WORKING !!!")
                     saved, resp = await create_serial(AadhaarSerial, data)
                     if saved:
                         print(resp.name)
