@@ -1288,7 +1288,7 @@ class AadharInfo(APIView):
                     if saved:
                         decoded_file = base64.b64decode(profile)
                         file = ContentFile(decoded_file, name=f"aadhar_profile_{user.username}")
-                        resp.profile_image.save(filename, file, save=True)
+                        resp.profile_image.save(f"aadhar_profile_{user.username}", file, save=True)
                         aadhar_name = resp.name
                 # profile = await Profile.objects.select_related('user').filter(user=user).order_by('-created_at').aget()
                 profile = await Profile.objects.aget(user=user)
