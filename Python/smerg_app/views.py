@@ -1280,12 +1280,13 @@ class AadharInfo(APIView):
             if exists:
                 data = request.data
                 data['user'] = user.id
+                profile = data['profile_image']
                 data['profile_image'] = None
                 print(data)
                 if not await AadhaarDetails.objects.filter(user=user).aexists():
                     saved, resp = await create_serial(AadhaarSerial, data)
                     if saved:
-                        decoded_file = base64.b64decode(audio)
+                        decoded_file = base64.b64decode(profile)
                         file = ContentFile(decoded_file, name=f"aadhar_profile_{user.username}")
                         resp.profile_image.save(filename, file, save=True)
                         aadhar_name = resp.name
