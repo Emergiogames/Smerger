@@ -9,14 +9,7 @@ class UserSerial(serializers.ModelSerializer):
         model = UserProfile
         fields = '__all__'
 
-class ProfileSerial(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = '__all__'
-
 class SaleProfilesSerial(serializers.ModelSerializer):
-    # user = UserSerial(read_only=True)
-
     class Meta:
         model = SaleProfiles
         fields = '__all__'
