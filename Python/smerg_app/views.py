@@ -488,7 +488,7 @@ class FranchiseList(APIView):
 class AdvisorList(APIView):
     @swagger_auto_schema(operation_description="Advisor fetching",
     responses={200: "Advisor Details fetched succesfully",400:"Passes an error message"})
-    def get(self, request, id):
+    async def get(self, request, id):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
@@ -503,7 +503,7 @@ class AdvisorList(APIView):
 
     @swagger_auto_schema(operation_description="Advisor creation",request_body=SaleProfilesSerial,
     responses={200: "{'status':True,'message': 'Advisor created successfully'}",400:"Passes an error message"})
-    def post(self,request):
+    async def post(self,request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
@@ -523,7 +523,7 @@ class AdvisorList(APIView):
 
     @swagger_auto_schema(operation_description="Advisor updation",request_body=SaleProfilesSerial,
     responses={200: "{'status':True,'message': 'Advisor updated successfully'}",400:"Passes an error message"})
-    def patch(self,request,id):
+    async def patch(self,request,id):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
@@ -537,7 +537,7 @@ class AdvisorList(APIView):
 
     @swagger_auto_schema(operation_description="Advisor deletion",request_body=SaleProfilesSerial,
     responses={200: "{'status':True,'message': 'Advisor deleted successfully'}",400:"Passes an error message"})
-    def delete(self,request,id):
+    async def delete(self,request,id):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
