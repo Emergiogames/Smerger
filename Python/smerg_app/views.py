@@ -293,7 +293,6 @@ class BusinessList(APIView):
                 if saved:
                     return Response({'status':True}, status=status.HTTP_201_CREATED)
                 return Response(resp)
-                return Response({'status':False,'message': 'Plan not purchased'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -364,11 +363,12 @@ class InvestorList(APIView):
                 data['entity_type'] = 'investor'
                 subscribed = await check_subscription(user, "investor")
                 if subscribed:
-                    saved, resp = await create_serial(SaleProfilesSerial, data)
-                    if saved:
-                        return Response({'status':True}, status=status.HTTP_201_CREATED)
-                    return Response(resp)
-                return Response({'status':False,'message': 'Plan not purchased'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                    if subscribed:
+                        data['subscribed'] = True
+                saved, resp = await create_serial(SaleProfilesSerial, data)
+                if saved:
+                    return Response({'status':True}, status=status.HTTP_201_CREATED)
+                return Response(resp)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -440,11 +440,12 @@ class FranchiseList(APIView):
                 # request.data['entity_type'] = 'franchise'
                 subscribed = await check_subscription(user, "franchise")
                 if subscribed:
-                    saved, resp = await create_serial(SaleProfilesSerial, data)
-                    if saved:
-                        return Response({'status':True}, status=status.HTTP_201_CREATED)
-                    return Response(resp)
-                return Response({'status':False,'message': 'Plan not purchased'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                    if subscribed:
+                        data['subscribed'] = True
+                saved, resp = await create_serial(SaleProfilesSerial, data)
+                if saved:
+                    return Response({'status':True}, status=status.HTTP_201_CREATED)
+                return Response(resp)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -487,70 +488,68 @@ class FranchiseList(APIView):
 class AdvisorList(APIView):
     @swagger_auto_schema(operation_description="Advisor fetching",
     responses={200: "Advisor Details fetched succesfully",400:"Passes an error message"})
-    def get(self,request):
+    def get(self, request, id):
         if request.headers.get('token'):
-            if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and not UserProfile.objects.get(auth_token=request.headers.get('token')).block:
-                id=request.GET.get('id')
+            exists, user = await check_user(request.headers.get('token'))
+            if exists:
                 if id == 0:
-                    serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='advisor', block=False).order_by('-id'), many=True)
+                    advisor = [posts async for posts in SaleProfiles.objects.filter(entity_type='advisor', block=False, verified=True).order_by('-id')]
                 else:
-                    user = UserProfile.objects.get(auth_token=request.headers.get('token'))
-                    serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='advisor', user=user, block=False).order_by('-id'), many=True)
-                return Response(serializer.data)
-            return Response({'status':False,'message': 'User doesnot exist'})
-        return Response({'status':False,'message': 'Token is not passed'})
+                    advisor = [posts async for posts in SaleProfiles.objects.filter(entity_type='advisor', user=user, block=False).order_by('-id')]
+                serialized_data = await serialize_data(advisor, SaleProfilesSerial)
+                return Response(serialized_data)
+            return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
     @swagger_auto_schema(operation_description="Advisor creation",request_body=SaleProfilesSerial,
     responses={200: "{'status':True,'message': 'Advisor created successfully'}",400:"Passes an error message"})
     def post(self,request):
         if request.headers.get('token'):
-            if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and not UserProfile.objects.get(auth_token=request.headers.get('token')).block:
-                user = UserProfile.objects.get(auth_token=request.headers.get('token'))
-                request.data['user'] = user.id
-                request.data['entity_type'] = 'advisor'
-                serializer = SaleProfilesSerial(data = request.data)
-                if serializer.is_valid():
-                    if Subscription.objects.filter(user=user).exists() and Subscription.objects.get(user=user).remaining_posts != 0:
-                        serializer.save()
-                        return Response({'status':True})
-                    return Response({'status':False,'message': 'Subscription doesnot exist'})
-                return Response(serializer.errors)
-            return Response({'status':False,'message': 'User doesnot exist'})
-        return Response({'status':False,'message': 'Token is not passed'})
+            exists, user = await check_user(request.headers.get('token'))
+            if exists:
+                data = request.data
+                data['user'] = user.id
+                data['entity_type'] = 'advisor'
+                subscribed = await check_subscription(user, "franchise")
+                if subscribed:
+                    if subscribed:
+                        data['subscribed'] = True
+                saved, resp = await create_serial(SaleProfilesSerial, data)
+                if saved:
+                    return Response({'status':True}, status=status.HTTP_201_CREATED)
+                return Response(resp)
+            return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
     @swagger_auto_schema(operation_description="Advisor updation",request_body=SaleProfilesSerial,
     responses={200: "{'status':True,'message': 'Advisor updated successfully'}",400:"Passes an error message"})
     def patch(self,request,id):
         if request.headers.get('token'):
-            if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and not UserProfile.objects.get(auth_token=request.headers.get('token')).block:
-                user = UserProfile.objects.get(auth_token=request.headers.get('token'))
-                advisor = SaleProfiles.objects.get(id=id)
-                serializer = SaleProfilesSerial(advisor, data=request.data, partial=True)
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response({'status':True})
-                return Response(serializer.errors)
-            return Response({'status':False,'message': 'User doesnot exist'})
-        return Response({'status':False,'message': 'Token is not passed'})
+            exists, user = await check_user(request.headers.get('token'))
+            if exists:
+                advisor = await SaleProfiles.objects.aget(id=id)
+                saved, resp = await update_serial(SaleProfilesSerial, request.data, advisor)
+                if saved:
+                    return Response({'status':True}, status=status.HTTP_201_CREATED)
+                return Response(resp)
+            return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
     @swagger_auto_schema(operation_description="Advisor deletion",request_body=SaleProfilesSerial,
     responses={200: "{'status':True,'message': 'Advisor deleted successfully'}",400:"Passes an error message"})
     def delete(self,request,id):
         if request.headers.get('token'):
-            if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and not UserProfile.objects.get(auth_token=request.headers.get('token')).block:
+            exists, user = await check_user(request.headers.get('token'))
+            if exists:
                 if id == 0:
-                    testimonial = Testimonial.objects.filter(user__id=UserProfile.objects.get(auth_token=request.headers.get('token')).id)
-                    advisor = SaleProfiles.objects.filter(user__id=UserProfile.objects.get(auth_token=request.headers.get('token')).id,entity_type='advisor')
-                    testimonial.delete()
-                    advisor.delete()
-                    return Response({'status':True})
-                advisor = SaleProfiles.objects.get(id=id)
-                testimonial = Testimonial.objects.filter(user=advisor.user)
-                testimonial.delete()
-                advisor.delete()
-                return Response({'status':True})
-            return Response({'status':False,'message': 'User doesnot exist'})
-        return Response({'status':False,'message': 'Token is not passed'})
+                    async for profile in SaleProfiles.objects.filter(user=user, entity_type='franchise'):
+                        await profile.adelete()
+                else:
+                    profiles = await SaleProfiles.objects.aget(id=id)
+                    await profiles.adelete()
+                return Response({'status':True}, status=status.HTTP_200_OK)
+            return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
 # User information
 class UserView(APIView):
