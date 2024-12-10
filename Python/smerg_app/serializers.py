@@ -35,11 +35,6 @@ class ContactSerial(serializers.ModelSerializer):
         model = Query
         fields = '__all__'
 
-class ProfileSerial(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = '__all__'
-
 class SuggestSerial(serializers.ModelSerializer):
     class Meta:
         model = Suggestion
