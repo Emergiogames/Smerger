@@ -4,7 +4,6 @@ from .models import *
 admin.site.register(UserProfile)
 admin.site.register(SaleProfiles)
 admin.site.register(Query)
-admin.site.register(Profile)
 admin.site.register(Wishlist)
 admin.site.register(Suggestion)
 admin.site.register(Testimonial)
