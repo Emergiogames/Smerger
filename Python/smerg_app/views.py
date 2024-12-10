@@ -897,14 +897,9 @@ class Recommended(APIView):
                         if preference.price_starting is not None:
                             query |= Q(range_ending__lte=preference.price_ending)
                     if request.GET.get('type'):
-                        if request.GET.get('type') != "advisor":
-                            query &= Q(entity_type=request.GET.get('type'), verified=True)
-                            products = [posts async for posts in SaleProfiles.objects.filter(query).order_by('-id')]
-                            serialized_data = await serialize_data(products, SaleProfilesSerial)
-                        else:
-                            query &= Q(type="advisor")
-                            products = [posts async for posts in Profile.objects.filter(query).order_by('-id')]
-                            serialized_data = await serialize_data(products, ProfileSerial)
+                        query &= Q(entity_type=request.GET.get('type'), verified=True)
+                        products = [posts async for posts in SaleProfiles.objects.filter(query).order_by('-id')]
+                        serialized_data = await serialize_data(products, SaleProfilesSerial)
                     else:
                         query &= Q(verified=True)
                         products = [posts async for posts in SaleProfiles.objects.filter(query).order_by('-id')]
@@ -1008,12 +1003,8 @@ class Featured(APIView):
     async def get(self,request):
         data = []
         if request.GET.get('type'):
-            if request.GET.get('type') != "advisor":
-                product = SaleProfiles.objects.filter(entity_type=request.GET.get('type'), verified=True).order_by('-id')
-                serial = SaleProfilesSerial
-            else:
-                product = Profile.objects.filter(type="advisor").order_by('-id')
-                serial = ProfileSerial
+            product = SaleProfiles.objects.filter(entity_type=request.GET.get('type'), verified=True).order_by('-id')
+            serial = SaleProfilesSerial
         else:
             product = SaleProfiles.objects.filter(verified=True)
             serial = SaleProfilesSerial
@@ -1034,12 +1025,8 @@ class Latest(APIView):
     responses={200: "Latest Posts Details fetched succesfully",400:"Passes an error message"})
     async def get(self,request):
         if request.GET.get('type'):
-            if request.GET.get('type') != "advisor":
-                product = [post async for post in SaleProfiles.objects.filter(entity_type=request.GET.get('type'), verified=True).order_by('-id')[:10]]
-                serial = SaleProfilesSerial
-            else:
-                product = [post async for post in Profile.objects.filter(type = "advisor").order_by('-id')[:10]]
-                serial = ProfileSerial
+            product = [post async for post in SaleProfiles.objects.filter(entity_type=request.GET.get('type'), verified=True).order_by('-id')[:10]]
+            serial = SaleProfilesSerial
         else:
             product = [post async for post in SaleProfiles.objects.filter(verified=True).order_by('-id')[:10]]
             serial = SaleProfilesSerial
