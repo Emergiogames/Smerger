@@ -3,7 +3,6 @@ from django.contrib.auth.models import User
 from .models import *
 from django.utils import timezone  
 
-
 class UserSerial(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
@@ -76,9 +75,14 @@ class NotiSerial(serializers.ModelSerializer):
         fields = '__all__'
 
 class EnqSerial(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()    
     class Meta:
         model = Enquiries
         fields = '__all__'
+    
+    def get_user(self, obj):
+        user = self.context.get('request').user
+        return {"id": user.id, "username": user.username, "name": user.first_name, "image": user.image}
 
 class ActivitySerial(serializers.ModelSerializer):
     post = SaleProfilesSerial()
