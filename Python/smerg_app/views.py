@@ -1258,8 +1258,8 @@ class RecentEnquiries(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                if request.GET.get('post_type'):
-                    user_posts = await SaleProfiles.objects.filter(user=user, entity_type=request.GET.get('post_type')).aexists()
+                if request.GET.get('id'):
+                    user_posts = await SaleProfiles.objects.filter(user=user, id=request.GET.get('id')).aexists()
                     if user_posts:
                         async for room in Room.objects.filter(Q(first_person=user) | Q(second_person=user)).order_by('-created_date')[:5]:
                             if await ChatMessage.objects.filter(room=room).aexists():
@@ -1279,10 +1279,10 @@ class EnquiriesCounts(APIView):
             exists, user = await check_user(request.headers.get('token'))
             impression = 0
             if exists:
-                if request.GET.get('post_type'):
-                    user_posts = await SaleProfiles.objects.filter(user=user, entity_type=request.GET.get('post_type')).aexists()
+                if request.GET.get('id'):
+                    user_posts = await SaleProfiles.objects.filter(user=user, id=request.GET.get('id')).aexists()
                     if user_posts:
-                        async for posts in SaleProfiles.objects.filter(user=user, entity_type=request.GET.get('post_type')):
+                        async for posts in SaleProfiles.objects.filter(user=user, id=request.GET.get('id')):
                             impression += posts.impressions
                         today = timezone.now().date()
                         yesterday = today - timedelta(days=1)
