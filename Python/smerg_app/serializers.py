@@ -76,6 +76,7 @@ class NotiSerial(serializers.ModelSerializer):
 
 class EnqSerial(serializers.ModelSerializer):
     user = UserSerial()
+
     class Meta:
         model = Enquiries
         fields = '__all__'
