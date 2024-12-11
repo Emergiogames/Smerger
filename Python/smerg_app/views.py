@@ -731,7 +731,7 @@ class RecentActs(APIView):
                 saved, resp = await create_serial(RecentSerial, data)
                 if saved:
                     product.impressions += 1
-                    await product.asave()				 
+                    await product.asave()
                     return Response({'status':True}, status=status.HTTP_200_OK)
                 return Response(serializer.errors)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
