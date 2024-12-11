@@ -75,6 +75,11 @@ class NotiSerial(serializers.ModelSerializer):
         model = Notification
         fields = '__all__'
 
+class EnqSerial(serializers.ModelSerializer):
+    class Meta:
+        model = Enquiries
+        fields = '__all__'
+
 class ActivitySerial(serializers.ModelSerializer):
     post = SaleProfilesSerial()
 

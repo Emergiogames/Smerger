@@ -291,8 +291,14 @@ class Notification(models.Model):
 class Activity(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True)
     post = models.ForeignKey(SaleProfiles, on_delete=models.CASCADE)
-    created = models.DateTimeField(auto_now_add=True)  # Timestamp for the first interaction
+    created = models.DateTimeField(auto_now_add=True)
     count = models.PositiveIntegerField(default=1,null=True)
+
+# Enquiries on a post
+class Enquiries(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True)
+    post = models.ForeignKey(SaleProfiles, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
 
 # Report model
 class Report(models.Model):

@@ -1261,12 +1261,10 @@ class RecentEnquiries(APIView):
                 if request.GET.get('id'):
                     user_posts = await SaleProfiles.objects.filter(user=user, id=request.GET.get('id')).aexists()
                     if user_posts:
-                        async for room in Room.objects.filter(Q(first_person=user) | Q(second_person=user)).order_by('-created_date')[:5]:
-                            if await ChatMessage.objects.filter(room=room).aexists():
-                                other_person = await sync_to_async(lambda: room.second_person if room.first_person == user else room.first_person)()
-                                enquiry_info = { 'other_person': other_person.username,'created_date': room.created_date}
-                                return Response({'status': True, 'recent_enquiries': enquiry_info}, status=status.HTTP_200_OK)
-                    return Response({'status': False, 'message': 'User has not added any posts in the requested type'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                        recent_enqs = [enqs async for enqs in Enquiries.objects.filter(post__id=request.GET.get('id')).order_by('-created')[:10]]
+                        serialized_data = await serialize_data(recent_enqs, EnqSerial)
+                        return Response(serialized_data)
+                    return Response({'status': False, 'message': 'No post found'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
                 return Response({'status': False, 'message': 'Post type param not found'}, status=status.HTTP_404_NOT_FOUND)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -1286,7 +1284,9 @@ class EnquiriesCounts(APIView):
                             impression += posts.impressions
                         today = timezone.now().date()
                         yesterday = today - timedelta(days=1)
-                        counts = Room.objects.filter(Q(first_person=user) | Q(second_person=user)).annotate(has_messages=Exists(ChatMessage.objects.filter(room=OuterRef('pk')))).filter(has_messages=True).aggregate(today_count=Count(Case(When(created_date__date=today, then=1), output_field=IntegerField(),)), yesterday_count=Count(Case(When(created_date__date=yesterday, then=1), output_field=IntegerField(),)), total_count=Count('id'))
+                        yesterday_enqs = await Enquiries.objects.filter(post__id=request.GET.get('id'), created__date=yesterday).acount()
+                        today_enqs = await Enquiries.objects.filter(post__id=request.GET.get('id'), created__date=today).acount()
+                        total_enqs = await Enquiries.objects.filter(post__id=request.GET.get('id'), created__date=today).acount()
                         return Response({'status': True, 'impressions':impression, 'today_count': counts['today_count'], 'yesterday_count': counts['yesterday_count'], 'total_count': counts['total_count']})
                     return Response({'status': False, 'message': 'User has not added any posts in the requested type'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
                 return Response({'status': False, 'message': 'Post type param not found'}, status=status.HTTP_404_NOT_FOUND)
