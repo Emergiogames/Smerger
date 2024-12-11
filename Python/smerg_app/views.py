@@ -420,10 +420,10 @@ class FranchiseList(APIView):
             else:
                 exists, user = await check_user(request.headers.get('token'))
                 if not exists:
+                    return Response({'status': False, 'message': 'User does not exist'}, status=status.HTTP_400_BAD_REQUEST)
                 businesses = [posts async for posts in SaleProfiles.objects.filter(entity_type='franchise', user=user, block=False).order_by('-id')]
             serialized_data = await serialize_data(businesses, SaleProfilesSerial)
             return Response(serialized_data)
-            return Response({'status': False, 'message': 'User does not exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status': False, 'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
     @swagger_auto_schema(operation_description="Create a new franchise profile. Requires a valid subscription with remaining posts.",
