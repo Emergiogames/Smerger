@@ -927,17 +927,17 @@ class Plans(APIView):
     @swagger_auto_schema(operation_description="Plans fetching", 
     responses={200: "Plans Details fetched succesfully",400:"Passes an error message"})
     async def get(self,request):
-        if request.headers.get('token'):
-            exists, user = await check_user(request.headers.get('token'))
-            if exists:
-                if request.GET.get('type'):
-                    plan = [plans async for plans in Plan.objects.filter(type=request.GET.get('type')).order_by('-id')]
-                else:
-                    plan = [plans async for plans in Plan.objects.all().order_by('-id')]
-                serialized_data = await serialize_data(plan, PlanSerial)
-                return Response(serialized_data)
-            return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
+        if request.GET.get('type'):
+            plan = [plans async for plans in Plan.objects.filter(type=request.GET.get('type')).order_by('-id')]
+        else:
+            plan = [plans async for plans in Plan.objects.all().order_by('-id')]
+        serialized_data = await serialize_data(plan, PlanSerial)
+        return Response(serialized_data)
+        # if request.headers.get('token'):
+            # exists, user = await check_user(request.headers.get('token'))
+            # if exists:
+        #     return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
+        # return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
 # Check subscriptions
 class Subscribe(APIView):
