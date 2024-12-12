@@ -359,8 +359,7 @@ class InvestorList(APIView):
                 data['entity_type'] = 'investor'
                 subscribed = await check_subscription(user, "investor")
                 if subscribed:
-                    if subscribed:
-                        data['subscribed'] = True
+                    data['subscribed'] = True
                 saved, resp = await create_serial(SaleProfilesSerial, data)
                 if saved:
                     return Response({'status':True}, status=status.HTTP_201_CREATED)
@@ -434,8 +433,7 @@ class FranchiseList(APIView):
                 # request.data['entity_type'] = 'franchise'
                 subscribed = await check_subscription(user, "franchise")
                 if subscribed:
-                    if subscribed:
-                        data['subscribed'] = True
+                    data['subscribed'] = True
                 saved, resp = await create_serial(SaleProfilesSerial, data)
                 if saved:
                     return Response({'status':True}, status=status.HTTP_201_CREATED)
@@ -463,7 +461,6 @@ class FranchiseList(APIView):
         responses={200: "{'status': True, 'message': 'Franchise deleted successfully'}",403: "{'status': False, 'message': 'User does not exist'}",
         400: "{'status': False, 'message': 'Token is not passed'}",404: "{'status': False, 'message': 'Franchise not found'}",},
         manual_parameters=[openapi.Parameter('id', openapi.IN_PATH,description="ID of the franchise profile to delete. Use 0 to delete all profiles of the logged-in user.", type=openapi.TYPE_INTEGER, required=True),])
-
     async def delete(self,request,id):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -504,8 +501,7 @@ class AdvisorList(APIView):
                 data['entity_type'] = 'advisor'
                 subscribed = await check_subscription(user, "franchise")
                 if subscribed:
-                    if subscribed:
-                        data['subscribed'] = True
+                    data['subscribed'] = True
                 saved, resp = await create_serial(SaleProfilesSerial, data)
                 if saved:
                     return Response({'status':True}, status=status.HTTP_201_CREATED)
