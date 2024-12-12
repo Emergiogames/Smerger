@@ -429,9 +429,9 @@ class FranchiseList(APIView):
                 data = request.data
                 data['user'] = user.id
                 data['entity_type'] = 'franchise'
-                subscribed = await check_subscription(user, "franchise")
-                if subscribed:
-                    data['subscribed'] = True
+                # subscribed = await check_subscription(user, "franchise")
+                # if subscribed:
+                #     data['subscribed'] = True
                 saved, resp = await create_serial(SaleProfilesSerial, data)
                 if saved:
                     return Response({'status':True, "message": "Franchise added successfully"}, status=status.HTTP_201_CREATED)
