@@ -429,8 +429,6 @@ class FranchiseList(APIView):
                 data = request.data
                 data['user'] = user.id
                 data['entity_type'] = 'franchise'
-                # request.data['user'] = user.id
-                # request.data['entity_type'] = 'franchise'
                 subscribed = await check_subscription(user, "franchise")
                 if subscribed:
                     data['subscribed'] = True
