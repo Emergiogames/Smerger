@@ -436,7 +436,7 @@ class FranchiseList(APIView):
                     data['subscribed'] = True
                 saved, resp = await create_serial(SaleProfilesSerial, data)
                 if saved:
-                    return Response({'status':True}, status=status.HTTP_201_CREATED)
+                    return Response({'status':True, "message": "Franchise added successfully"}, status=status.HTTP_201_CREATED)
                 return Response(resp)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
