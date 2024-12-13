@@ -1331,6 +1331,7 @@ class AadharInfo(APIView):
                     if saved:
                         aadhar_name = resp.name
                 if data['name'].lower() != user.first_name.lower():
+                    resp.delete()
                     return Response({'status': False, 'message': 'Data not matching'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
                 await Profile.objects.filter(user=user).aupdate(aadhar_verified=False)
                 return Response({'status': True, 'message': 'Aadhaar data saved successfully'}, status=status.HTTP_201_CREATED)
