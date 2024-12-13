@@ -40,22 +40,23 @@ class UserProfile(AbstractUser):
 
     objects = CustomUserManager()
 
-class Profile(models.Model):
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
-    number = models.CharField(max_length=17)
-    email = models.EmailField(max_length=254)
-    industry = models.CharField(max_length=100)
-    web_url = models.CharField(max_length=200, blank=True, null=True)
-    state = models.CharField(max_length=100)
-    city = models.CharField(max_length=100)
-    image = models.ImageField(storage=MediaStorage(),upload_to='profile_images/', blank=True, null=True)
-    experiance = models.CharField(max_length=500, blank=True, null=True)
-    interest = models.CharField(max_length=500, blank=True, null=True)
-    about = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    type = models.CharField(max_length=100)
+# class Profile(models.Model):
+#     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+#     name = models.CharField(max_length=100)
+#     number = models.CharField(max_length=17)
+#     email = models.EmailField(max_length=254)
+#     industry = models.CharField(max_length=100)
+#     web_url = models.CharField(max_length=200, blank=True, null=True)
+#     state = models.CharField(max_length=100)
+#     city = models.CharField(max_length=100)
+#     image = models.ImageField(storage=MediaStorage(),upload_to='profile_images/', blank=True, null=True)
+#     experiance = models.CharField(max_length=500, blank=True, null=True)
+#     about = models.TextField()
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+#     type = models.CharField(max_length=100)
+#     aadhar_verified = models.BooleanField(default=False)
+#     interest = models.CharField(max_length=500, blank=True, null=True)
 
 # Business, Investor, Franchise posts
 class SaleProfiles(models.Model):
@@ -75,6 +76,7 @@ class SaleProfiles(models.Model):
 
     # Common fields
     industry = models.CharField(max_length=100, null=True, blank=True)
+    company = models.CharField(max_length=100, null=True, blank=True)
     url = models.CharField(max_length=100, null=True, blank=True)
     city = models.CharField(max_length=100, null=True, blank=True)
     state = models.CharField(max_length=100, null=True, blank=True)
@@ -105,7 +107,7 @@ class SaleProfiles(models.Model):
     location_interested = models.TextField(null=True, blank=True)
     evaluating_aspects = models.TextField(null=True, blank=True)
     preference = models.JSONField(null=True, blank=True)
-    profile_summary=models.TextField(null=True,blank=True)
+    profile_summary = models.TextField(null=True,blank=True)
 
     # Franchise-specific fields
     initial = models.IntegerField(null=True, blank=True)
@@ -122,7 +124,17 @@ class SaleProfiles(models.Model):
     brand_fee = models.IntegerField(null=True, blank=True)
     staff = models.IntegerField(null=True, blank=True)
 
+    # Advisor-specific fields
+    interested_in = models.JSONField(null=True, blank=True)
+    role = models.CharField(max_length=100, null=True, blank=True)
+    designation = models.CharField(max_length=100, null=True, blank=True)
+    interested_industry = models.JSONField(null=True, blank=True)
+    interested_location = models.JSONField(null=True, blank=True)
+    factors_looking = models.TextField(null=True, blank=True)
+    about_company = models.TextField(null=True, blank=True)
+    
     # Common file fields
+    profile = models.FileField(storage=MediaStorage(), upload_to='combined/images/profile', null=True, blank=True)
     logo = models.FileField(storage=MediaStorage(), upload_to='combined/images', null=True, blank=True)
     image1 = models.FileField(storage=MediaStorage(), upload_to='combined/images', null=True, blank=True)
     image2 = models.FileField(storage=MediaStorage(), upload_to='combined/images', null=True, blank=True)
@@ -138,6 +150,7 @@ class SaleProfiles(models.Model):
     proof4 = models.FileField(storage=MediaStorage(), upload_to='combined/proof', null=True, blank=True)
     block = models.BooleanField(default=False)
     verified = models.BooleanField(default=False)
+    subcribed = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.name} ({self.entity_type})"
@@ -278,8 +291,14 @@ class Notification(models.Model):
 class Activity(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True)
     post = models.ForeignKey(SaleProfiles, on_delete=models.CASCADE)
-    created = models.DateTimeField(auto_now_add=True)  # Timestamp for the first interaction
+    created = models.DateTimeField(auto_now_add=True)
     count = models.PositiveIntegerField(default=1,null=True)
+
+# Enquiries on a post
+class Enquiries(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True)
+    post = models.ForeignKey(SaleProfiles, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
 
 # Report model
 class Report(models.Model):
@@ -295,7 +314,7 @@ class Report(models.Model):
     ]
 
     report_post = models.ForeignKey(SaleProfiles, on_delete=models.CASCADE, null=True, blank=True)
-    reported_profile = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, blank=True)
+    reported_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True, related_name='userprofile_reported')
     reason = models.TextField()
     reason_type = models.CharField(max_length=255)
     reported_by = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
@@ -325,3 +344,13 @@ class UserSession(models.Model):
         
     def __str__(self):
         return f"{self.user} - {self.session_duration}s"
+
+class AadhaarDetails(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True)
+    name = models.CharField(max_length=50)
+    number = models.CharField(max_length=50, null=True, blank=True)
+    email = models.CharField(max_length=50, null=True, blank=True)
+    dob = models.CharField(max_length=50, null=True, blank=True)
+    gender = models.CharField(max_length=50, null=True, blank=True)
+    address = models.JSONField(null=True, blank=True)
+    profile_image = models.ImageField(upload_to="aadhaar/image", null=True, blank=True)

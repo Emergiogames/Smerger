@@ -3,20 +3,12 @@ from django.contrib.auth.models import User
 from .models import *
 from django.utils import timezone  
 
-
 class UserSerial(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = '__all__'
 
-class ProfileSerial(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = '__all__'
-
 class SaleProfilesSerial(serializers.ModelSerializer):
-    # user = UserSerial(read_only=True)
-
     class Meta:
         model = SaleProfiles
         fields = '__all__'
@@ -40,11 +32,6 @@ class RecentSerial(serializers.ModelSerializer):
 class ContactSerial(serializers.ModelSerializer):
     class Meta:
         model = Query
-        fields = '__all__'
-
-class ProfileSerial(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
         fields = '__all__'
 
 class SuggestSerial(serializers.ModelSerializer):
@@ -87,6 +74,13 @@ class NotiSerial(serializers.ModelSerializer):
         model = Notification
         fields = '__all__'
 
+class EnqSerial(serializers.ModelSerializer):
+    user = UserSerial()
+
+    class Meta:
+        model = Enquiries
+        fields = '__all__'
+
 class ActivitySerial(serializers.ModelSerializer):
     post = SaleProfilesSerial()
 
@@ -99,4 +93,9 @@ class ReportSerial(serializers.ModelSerializer):
 
     class Meta:
         model = Report
+        fields = '__all__'
+
+class AadhaarSerial(serializers.ModelSerializer):
+    class Meta:
+        model = AadhaarDetails
         fields = '__all__'

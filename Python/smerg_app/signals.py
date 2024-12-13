@@ -15,15 +15,13 @@ def log_model_save(sender, instance, created, **kwargs):
             subscribe.remaining_posts -= 1
             subscribe.save()
   
-            ## Create Activity Log
-            ActivityLog.objects.create(
-                user = instance.user,
-                action = action,
-                title = "New Post Published",
-                description = f"{instance.name} has just published an exciting new post! Dive into their latest content to see what's new and stay engaged with their updates.",
-                rate = instance.range_starting,
-                img = instance.user.image,
-                username = instance.user.first_name
-            )
-        else:
-            instance.delete()
+        ## Create Activity Log
+        ActivityLog.objects.create(
+            user = instance.user,
+            action = action,
+            title = "New Post Published",
+            description = f"{instance.name} has just published an exciting new post! Dive into their latest content to see what's new and stay engaged with their updates.",
+            rate = instance.range_starting,
+            img = instance.user.image,
+            username = instance.user.first_name
+        )
