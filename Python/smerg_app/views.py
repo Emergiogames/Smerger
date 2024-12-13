@@ -1330,10 +1330,7 @@ class AadharInfo(APIView):
                     saved, resp = await create_serial(AadhaarSerial, data)
                     if saved:
                         aadhar_name = resp.name
-                # profile = await Profile.objects.select_related('user').filter(user=user).order_by('-created_at').aget()
-                # profile = await UserProfile.objects.aget(user=user)
-                if profile.name.lower() != user.first_name.lower():
-                    await profile.adelete()
+                if data.name.lower() != user.first_name.lower():
                     return Response({'status': False, 'message': 'Data not matching'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
                 await Profile.objects.filter(user=user).aupdate(aadhar_verified=False)
                 return Response({'status': True, 'message': 'Aadhaar data saved successfully'}, status=status.HTTP_201_CREATED)
