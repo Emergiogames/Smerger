@@ -9,6 +9,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         today = datetime.now().date()
         for i in Subscription.objects.all():
+            print(f"plans are {i}")
             if i.expiry_date == today:
                 i.delete()
 
