@@ -3,19 +3,15 @@ from smerg_app.models import *
 from django.utils import timezone
 from datetime import timedelta, datetime
 
-# Task creation for deleting PLAN SUBSCRIPTION on EXPIRY (Need to be updated at/ before 11.59)
+# Task creation for deleting PLAN SUBSCRIPTION, DEACTIVATED USERS, BANNER VALIDATION on EXPIRY (Need to be updated at/ before 11.59)
 class Command(BaseCommand):
     help = 'Update Daily'
     def handle(self, *args, **kwargs):
-        today = datetime.now().date()
-        for i in Subscription.objects.all():
-            if i.expiry_date == today:
-                i.delete()
+        today = timezone.now().date()
 
-        for i in Banner.objects.all():
-            if i.validity_date == today:
-                i.delete()
+        Subscription.objects.filter(expiry_date=today).delete()
 
-        for i in UserProfile.objects.filter(deactivate=True):
-            if i.deactivated_on == today:
-                i.delete()
+        Banner.objects.filter(validity_date=today).delete()
+
+        cutoff_date = today - timedelta(days=30)
+        deactivated = UserProfile.objects.filter(deactivate=True, deactivated_on__lte=cutoff_date).delete()
