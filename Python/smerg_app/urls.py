@@ -9,16 +9,14 @@ urlpatterns = [
     path('forgotpwd',ForgotPwd.as_view()), # Forgot password
     path('changepwd',ChangePwd.as_view()), # Change Password
     path('otpconfirm',OTPConfirm.as_view()), # OTP Confirmation
-    path('profile',Profiles.as_view()), # Profile
-    path('profile<int:id>',Profiles.as_view()), # Profile
     path('business',BusinessList.as_view()), # Business
     path('business<int:id>',BusinessList.as_view()), # Business
     path('investor',InvestorList.as_view()), # Investor
     path('investor<int:id>',InvestorList.as_view()),  # Investor
     path('franchise',FranchiseList.as_view()), # Franchise
     path('franchise<int:id>',FranchiseList.as_view()), # Franchise
-    # path('advisor',AdvisorList.as_view()), # Advisor
-    # path('advisor<int:id>',AdvisorList.as_view()), # Advisor
+    path('advisor',AdvisorList.as_view()), # Advisor
+    path('advisor<int:id>',AdvisorList.as_view()), # Advisor
     path('contact',Contact.as_view()), # Contact Us
     path('search',Search.as_view()), # Search
     path('user',UserView.as_view()), # User information
@@ -42,7 +40,6 @@ urlpatterns = [
     path('graph',Graph.as_view()), # Graph
     path('userid',User.as_view()), # User Id passing
     path('onesignal',OneSignal.as_view()), # OneSignal Id updating
-    # path('onesignal', onesignal_id), # OneSignal Id updating
     path('popularsearch',Popularsearch.as_view()), #popular searched posts
     path('popularsearch<int:id>',Popularsearch.as_view()),# popular searched posts
     path('recentsearchview',RecentSearchview.as_view()), #recently viewed posts
@@ -50,4 +47,6 @@ urlpatterns = [
     path('report',ReportPost.as_view()), # Report the post
     path('recent_enquiries',RecentEnquiries.as_view()), # recent enquiries
     path('count_enquiries',EnquiriesCounts.as_view()), # count of recent enquires
+    path('filter_posts', FilterPosts.as_view()), # Filter data from posts
+    path('aadhaar', AadharInfo.as_view()), # Save aadhar data
 ]

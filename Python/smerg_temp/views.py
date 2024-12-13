@@ -283,9 +283,8 @@ class FranchiseView(APIView):
 
 # Blocking a user
 class Blocked(APIView):
-    @swagger_auto_schema(operation_description="Blocking/ Unblocking a user",request_body=ProfileSerial,
+    @swagger_auto_schema(operation_description="Blocking/ Unblocking a user",request_body=UserSerial,
     responses={200: "{'status':True,'message': 'Blocked/ Unblocked a user successfully'}",400:"Passes an error message"})
-    
     def post(self,request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:

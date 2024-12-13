@@ -28,30 +28,8 @@ def notify_room_update(sender, instance, **kwargs):
         }
     )
 
-    # async def async_notify():
-    #     channel_layer = get_channel_layer()
-    #     await channel_layer.group_send(
-    #         'room_updates',
-    #         {
-    #             'type': 'room_message',
-    #             'room_data': {
-    #                 'id': instance.id,
-    #                 'first_person': instance.first_person.id,
-    #                 'first_name': instance.first_person.first_name,
-    #                 'first_image': instance.first_person.image.url if instance.first_person.image else None,
-    #                 'second_person': instance.second_person.id,
-    #                 'second_name': instance.second_person.first_name,
-    #                 'second_image': instance.second_person.image.url if instance.second_person.image else None,
-    #                 'last_msg': decrypt_message(instance.last_msg),
-    #                 'updated': instance.updated.strftime('%Y-%m-%d %H:%M:%S')
-    #             }
-    #         }
-    #     )
-
-    # async_to_sync(async_notify)()
-
 @receiver(post_save, sender=Notification)
-def notify_noti_update(sender, instance, **kwargs):
+def notify_update(sender, instance, **kwargs):
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
         'noti_updates',
@@ -69,16 +47,5 @@ def send_noti(sender, instance, created, **kwargs):
     if created:
         room = Room.objects.get(id=instance.room.id)
         recieved = instance.sended_to
-        send_notifications(instance.message, instance.sended_by.first_name, recieved.onesignal_id)
-
-        # channel_layer = get_channel_layer()
-        # async_to_sync(channel_layer.group_send)(
-        #     'noti_updates',
-        #     {
-        #         'type': 'notification',
-        #         'noti': {
-        #             'title': "New message",
-        #             'description': f"You have a new message from {instance.sended_by.first_name}",
-        #         }
-        #     }
-        # )
+        if recieved.onesignal_id:
+            send_notifications(instance.message, instance.sended_by.first_name, recieved.onesignal_id)

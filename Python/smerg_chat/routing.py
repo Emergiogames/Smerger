@@ -6,4 +6,3 @@ websocket_urlpatterns = [
     path('rooms',consumers.RoomConsumer.as_asgi()),
     path('notification',consumers.NotiConsumer.as_asgi()),
 ]
-

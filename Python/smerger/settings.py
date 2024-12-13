@@ -145,6 +145,9 @@ CACHES = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
+         'OPTIONS': {
+            'charset': 'utf8mb4',
+        },
         'NAME': config('MYSQL_DATABASE'),
         'USER': config('MYSQL_USER'),
         'PASSWORD': config('MYSQL_ROOT_PASSWORD'),
@@ -193,6 +196,28 @@ AWS_S3_USE_SSL = True
 AWS_S3_VERIFY = True
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_QUERYSTRING_AUTH = False
+AWS_S3_ENCRYPTION = True
+AWS_S3_SERVER_SIDE_ENCRYPTION = 'AES256'
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "OPTIONS": {
+            "bucket_name": config('AWS_STORAGE_BUCKET_NAME'),
+            "location": "media/",
+            "default_acl": "private",
+            "file_overwrite": False
+        }
+    },
+    "staticfiles": {
+        "BACKEND": "storages.backends.s3boto3.S3StaticStorage",
+        "OPTIONS": {
+            "bucket_name": config('AWS_STORAGE_BUCKET_NAME'),
+            "location": "static/",
+            "default_acl": "private"
+        }
+    }
+}
 
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
