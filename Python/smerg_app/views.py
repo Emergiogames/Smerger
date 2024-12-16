@@ -432,6 +432,9 @@ class FranchiseList(APIView):
                 data['entity_type'] = 'franchise'
                 data['title'] = f'{data['industry']} {data['offering']}'
                 data['single_desc'] = f'{data['company']}, Established in {data['establish_yr']}, {data['total_outlets']} Franchises, {data['state']}'
+                subscribed = await check_subscription(user, "franchise")
+                if subscribed:
+                    data['subscribed'] = True
                 saved, resp = await create_serial(SaleProfilesSerial, data)
                 print(resp)
                 if saved:
@@ -498,6 +501,8 @@ class AdvisorList(APIView):
                 data = request.data
                 data['user'] = user.id
                 data['entity_type'] = 'advisor'
+                data['title'] = f'{data['designation']}, Financial Advisor, {data['city']}, {data['state']}'
+                data['single_desc'] = f'Advisor in {data['city']}, {data['state']}'
                 subscribed = await check_subscription(user, "franchise")
                 if subscribed:
                     data['subscribed'] = True
@@ -553,9 +558,9 @@ class UserView(APIView):
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
     @swagger_auto_schema(operation_description="Update details of the logged-in user.",
-        request_body=openapi.Schema(type=openapi.TYPE_OBJECT,properties={'username': openapi.Schema(type=openapi.TYPE_STRING, description="Updated username of the user"),'email': openapi.Schema(type=openapi.TYPE_STRING, description="Updated email of the user"),
-        'other_field': openapi.Schema(type=openapi.TYPE_STRING, description="Other fields as required"),}),
-        responses={200: "{'status': True, 'message': 'User updated successfully'}",403: "{'status': False, 'message': 'User does not exist'}",400: "Returns validation errors or {'status': False, 'message': 'Token is not passed'}",})
+    request_body=openapi.Schema(type=openapi.TYPE_OBJECT,properties={'username': openapi.Schema(type=openapi.TYPE_STRING, description="Updated username of the user"),'email': openapi.Schema(type=openapi.TYPE_STRING, description="Updated email of the user"),
+    'other_field': openapi.Schema(type=openapi.TYPE_STRING, description="Other fields as required"),}),
+    responses={200: "{'status': True, 'message': 'User updated successfully'}",403: "{'status': False, 'message': 'User does not exist'}",400: "Returns validation errors or {'status': False, 'message': 'Token is not passed'}",})
     async def patch(self,request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
