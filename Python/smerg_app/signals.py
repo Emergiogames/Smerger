@@ -11,10 +11,12 @@ def log_model_save(sender, instance, created, **kwargs):
 
         ## Check and update subscription
         if Subscription.objects.filter(user = instance.user, plan__type = instance.entity_type.lower()).exists() and Subscription.objects.get(user = instance.user, plan__type = instance.entity_type.lower()).remaining_posts != 0:
+            instance.subcribed = False
+            instance.save()
             subscribe = Subscription.objects.get(user = instance.user, plan__type = instance.entity_type.lower())
             subscribe.remaining_posts -= 1
             subscribe.save()
-  
+
         ## Create Activity Log
         ActivityLog.objects.create(
             user = instance.user,
@@ -25,3 +27,16 @@ def log_model_save(sender, instance, created, **kwargs):
             img = instance.user.image,
             username = instance.user.first_name
         )
+
+# Signal for updating posts after a subscription is brought
+@receiver(post_save, sender=Subscription)
+def log_model_save(sender, instance, created, **kwargs):
+    if created:
+
+        # updating unsubscribed posts
+        posts = SaleProfiles.objects.filter(user=instance.user, entity_type=instance.plan.type, subcribed=False)[:instance.remaining_posts]
+        posts.update(subcribed=True)
+
+        # updating remaining posts count
+        instance.remaining_posts = max(0, instance.remaining_posts - first_remaining_profiles.count())
+        instance.save()
