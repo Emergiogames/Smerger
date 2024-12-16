@@ -569,6 +569,7 @@ class UserView(APIView):
                     name = await sync_to_async(lambda: details.name)()
                     if request.data["first_name"].lower() != name.lower():
                         return Response({'status': False, 'message': 'Data not matching'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+                request.data['verified'] = True
                 saved, resp = await update_serial(UserSerial, request.data, user)
                 if saved:
                     return Response({'status':True,'message': 'User updated successfully'}, status=status.HTTP_201_CREATED)
@@ -1337,7 +1338,8 @@ class AadharInfo(APIView):
                         aadhar_name = resp.name
                 if data['name'].lower() != user.first_name.lower():
                     return Response({'status': False, 'message': 'Data not matching'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-                await Profile.objects.filter(user=user).aupdate(aadhar_verified=False)
+                user.verified = True
+                await user.asave()
                 return Response({'status': True, 'message': 'Aadhaar data saved successfully'}, status=status.HTTP_201_CREATED)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)

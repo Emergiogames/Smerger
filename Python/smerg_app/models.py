@@ -150,6 +150,8 @@ class SaleProfiles(models.Model):
     proof2 = models.FileField(storage=MediaStorage(), upload_to='combined/proof', null=True, blank=True)
     proof3 = models.FileField(storage=MediaStorage(), upload_to='combined/proof', null=True, blank=True)
     proof4 = models.FileField(storage=MediaStorage(), upload_to='combined/proof', null=True, blank=True)
+
+    # Booleens
     block = models.BooleanField(default=False)
     verified = models.BooleanField(default=False)
     subcribed = models.BooleanField(default=False)
