@@ -37,6 +37,7 @@ class UserProfile(AbstractUser):
     inactive_from = models.DateTimeField(null=True, blank=True)
     deactivate = models.BooleanField(default=False)
     deactivated_on = models.DateField(null=True, blank=True)
+    verified = models.BooleanField(default=False) ## Aadhar verification
 
     objects = CustomUserManager()
 
@@ -153,7 +154,7 @@ class SaleProfiles(models.Model):
 
     # Booleens
     block = models.BooleanField(default=False)
-    verified = models.BooleanField(default=False)
+    verified = models.BooleanField(default=False) ## Admin verification
     subcribed = models.BooleanField(default=False)
 
     def __str__(self):
