@@ -567,7 +567,7 @@ class UserView(APIView):
                 if await AadhaarDetails.objects.filter(user=user).aexists():
                     details = await AadhaarDetails.objects.aget(user=user)
                     name = await sync_to_async(lambda: details.name)()
-                    if request.data["name"].lower() != name.lower():
+                    if request.data["first_name"].lower() != name.lower():
                         return Response({'status': False, 'message': 'Data not matching'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
                 saved, resp = await update_serial(UserSerial, request.data, user)
                 if saved:
