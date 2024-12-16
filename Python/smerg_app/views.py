@@ -563,14 +563,14 @@ class UserView(APIView):
                 already_exists = await UserProfile.objects.filter(Q(username=request.data.get('phone'))|Q(email=request.data.get('email'))& ~Q(id=user.id)).aexists() 
                 if already_exists:
                     return Response({'status':False,'message': 'User with same details already exists'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-                # mutable_data = request.data
+                data = request.data
                 if await AadhaarDetails.objects.filter(user=user).aexists():
                     details = await AadhaarDetails.objects.aget(user=user)
                     name = await sync_to_async(lambda: details.name)()
-                    if request.data["first_name"].lower() != name.lower():
+                    if data["first_name"].lower() != name.lower():
                         return Response({'status': False, 'message': 'Data not matching'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-                request.data['verified'] = True
-                saved, resp = await update_serial(UserSerial, request.data, user)
+                data['verified'] = True
+                saved, resp = await update_serial(UserSerial, data, user)
                 if saved:
                     return Response({'status':True,'message': 'User updated successfully'}, status=status.HTTP_201_CREATED)
                 return Response(resp)
