@@ -68,6 +68,8 @@ class SaleProfiles(models.Model):
     ]
 
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    title = models.TextField(default='')
+    single_desc = models.TextField(default='')
     entity_type = models.CharField(max_length=50, choices=ENTITY_TYPE_CHOICES)
     name = models.CharField(max_length=100)
     description = models.TextField()

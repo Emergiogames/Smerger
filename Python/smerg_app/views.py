@@ -284,6 +284,7 @@ class BusinessList(APIView):
                 data = request.data
                 data['user'] = user.id
                 data['entity_type'] = 'business'
+                data['title'] = f'{data['industry']} for {data['type_sale']} in {data['city']}, {data['state']}'
                 subscribed = await check_subscription(user, "business")
                 if subscribed:
                     data['subscribed'] = True
@@ -353,10 +354,10 @@ class InvestorList(APIView):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
                 data = request.data
-                # request.data['user'] = user.id
-                # request.data['entity_type'] = 'investor'
                 data['user'] = user.id
                 data['entity_type'] = 'investor'
+                data['title'] = f'{data['designation']}, {data['industry']}, {data['preference'][0]}, {data['city']}, {data['state']}'
+                data['single_desc'] = f'{data['preference'][0]} in {data['city']}, {data['state']}'
                 subscribed = await check_subscription(user, "investor")
                 if subscribed:
                     data['subscribed'] = True
@@ -429,9 +430,8 @@ class FranchiseList(APIView):
                 data = request.data
                 data['user'] = user.id
                 data['entity_type'] = 'franchise'
-                # subscribed = await check_subscription(user, "franchise")
-                # if subscribed:
-                #     data['subscribed'] = True
+                data['title'] = f'{data['industry']} {data['offering']}'
+                data['single_desc'] = f'{data['company']}, Established in {data['establish_yr']}, {data['total_outlets']} Franchises, {data['state']}'
                 saved, resp = await create_serial(SaleProfilesSerial, data)
                 print(resp)
                 if saved:
@@ -564,6 +564,11 @@ class UserView(APIView):
                 if already_exists:
                     return Response({'status':False,'message': 'User with same details already exists'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
                 # mutable_data = request.data
+                if await AadhaarDetails.objects.filter(user=user).aexists():
+                    details = await AadhaarDetails.objects.aget(user=user)
+                    name = await sync_to_async(lambda: details.name)()
+                    if request.data["name"].lower() != name.lower():
+                        return Response({'status': False, 'message': 'Data not matching'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
                 saved, resp = await update_serial(UserSerial, request.data, user)
                 if saved:
                     return Response({'status':True,'message': 'User updated successfully'}, status=status.HTTP_201_CREATED)
@@ -1331,7 +1336,6 @@ class AadharInfo(APIView):
                     if saved:
                         aadhar_name = resp.name
                 if data['name'].lower() != user.first_name.lower():
-                    resp.delete()
                     return Response({'status': False, 'message': 'Data not matching'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
                 await Profile.objects.filter(user=user).aupdate(aadhar_verified=False)
                 return Response({'status': True, 'message': 'Aadhaar data saved successfully'}, status=status.HTTP_201_CREATED)
