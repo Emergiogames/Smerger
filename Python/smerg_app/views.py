@@ -42,8 +42,8 @@ class LoginView(APIView):
         if exists:
             if check_password(request.data.get('password'), user.password):
                 if not user.block and not user.deactivate:
-                        token = await Token.objects.aget(user=user)
-                        return Response({'status':True, 'token':token.key}, status=status.HTTP_200_OK)
+                    token = await Token.objects.aget(user=user)
+                    return Response({'status':True, 'token':token.key, "user_data":user}, status=status.HTTP_200_OK)
                 return Response({'status':False,'message': 'User Blocked/ Account deactivated'}, status=status.HTTP_403_FORBIDDEN)
         return Response({'status':False,'message': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
