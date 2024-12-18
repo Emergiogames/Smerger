@@ -181,10 +181,10 @@ class RoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         token = self.scope['query_string'].decode().split('=')[-1]
         exists, self.user = await check_user(token)
-        self.user.active_from = timezone.now()
-        self.user.is_active = True
+        # self.user.active_from = timezone.now()
+        # self.user.is_active = True
         print('Connected', self.user.first_name, self.user.verified)
-        await self.user.asave()
+        # await self.user.asave()
         self.room_group_name =  f'user_{self.user.id}'
         await self.channel_layer.group_add(self.room_group_name,self.channel_name)
         await self.accept()
@@ -204,12 +204,12 @@ class RoomConsumer(AsyncWebsocketConsumer):
         )
 
     async def disconnect(self, close_code):
-        self.user.is_active = False
-        self.user.inactive_from = timezone.now()
-        total_hr_spend = timezone.now() - self.user.active_from
-        self.user.total_hr_spend += round(total_hr_spend.total_seconds() / 3600, 2)
+        # self.user.is_active = False
+        # self.user.inactive_from = timezone.now()
+        # total_hr_spend = timezone.now() - self.user.active_from
+        # self.user.total_hr_spend += round(total_hr_spend.total_seconds() / 3600, 2)
+        # await self.user.asave()
         print('disconnected', self.user.first_name, self.user.verified)
-        await self.user.asave()
         await self.channel_layer.group_discard(self.room_group_name,self.channel_name)
 
     async def room_message(self, event):
