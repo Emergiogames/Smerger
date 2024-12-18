@@ -184,7 +184,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
         self.user.active_from = timezone.now()
         self.user.is_active = True
         await self.user.asave()
-        print('Connected')
+        print('Connected', self.user.name, self.user.verified)
         self.room_group_name =  f'user_{self.user.id}'
         await self.channel_layer.group_add(self.room_group_name,self.channel_name)
         await self.accept()
