@@ -204,7 +204,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
         )
 
     async def disconnect(self, close_code):
-        user = await User.objects.aget(id=self.user_id)
+        user = await UserProfile.objects.aget(id=self.user_id)
         user.is_active = False
         user.inactive_from = timezone.now()
         total_hr_spend = timezone.now() - user.active_from
