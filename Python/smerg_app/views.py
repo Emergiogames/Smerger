@@ -574,7 +574,7 @@ class UserView(APIView):
                     name = await sync_to_async(lambda: details.name)()
                     if data["first_name"].lower() != name.lower():
                         return Response({'status': False, 'message': 'Data not matching'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-                data['verified'] = True
+                    data['verified'] = True
                 saved, resp = await update_serial(UserSerial, data, user)
                 if saved:
                     return Response({'status':True,'message': 'User updated successfully'}, status=status.HTTP_201_CREATED)
