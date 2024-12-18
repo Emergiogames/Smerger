@@ -185,16 +185,16 @@ class RoomConsumer(AsyncWebsocketConsumer):
         user.active_from = timezone.now()
         user.is_active = True
         await user.asave()
-        self.room_group_name =  f'user_{self.user.id}'
+        self.room_group_name =  f'user_{self.user_id}'
         await self.channel_layer.group_add(self.room_group_name,self.channel_name)
         await self.accept()
-        total_second = await Room.objects.filter(second_person=self.user, unread_messages_second__gt=0).acount()
-        total_first = await Room.objects.filter(first_person=self.user, unread_messages_first__gt=0).acount()
+        total_second = await Room.objects.filter(second_person=user, unread_messages_second__gt=0).acount()
+        total_first = await Room.objects.filter(first_person=user, unread_messages_first__gt=0).acount()
         room_data = {
             "total_unread": total_first + total_second,
-            "total_noti": await Notification.objects.filter(user=self.user).exclude(read_by=self.user).acount()
+            "total_noti": await Notification.objects.filter(user=user).exclude(read_by=user).acount()
         }
-        print(f"For User {self.user} room_data is {room_data} with {total_first} & {total_second}")
+        print(f"For User {user} room_data is {room_data} with {total_first} & {total_second}")
         await self.channel_layer.group_send(
             self.room_group_name,
             {
