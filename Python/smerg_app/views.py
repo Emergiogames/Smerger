@@ -1280,7 +1280,7 @@ class EnquiriesCounts(APIView):
                     if user_posts:
                         async for posts in SaleProfiles.objects.filter(user=user, id=request.GET.get('id')):
                             impression += posts.impressions
-                        today = timezone.now().date()
+                        today = timezone.localtime().date()
                         yesterday = today - timedelta(days=1)
                         yesterday_enqs = await Enquiries.objects.filter(post__id=request.GET.get('id'), created__date=yesterday).acount()
                         today_enqs = await Enquiries.objects.filter(post__id=request.GET.get('id'), created__date=today).acount()
