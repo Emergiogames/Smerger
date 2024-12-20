@@ -18,7 +18,7 @@ admin.site.register(Activity)
 admin.site.register(AadhaarDetails)
 
 class EnquiriesAdmin(admin.ModelAdmin):
-    list_display = ('user', 'post', 'room_id' 'created')
+    list_display = ('user', 'post', 'room_id', 'created')
 
 
 admin.site.register(Enquiries, EnquiriesAdmin)
