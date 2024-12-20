@@ -41,17 +41,18 @@ class Rooms(APIView):
                     image = recieved_image.url 
                 else: 
                     image = None
+                enquiry = None
                 if not await Enquiries.objects.filter(user=user, post=reciever).aexists():
                     enquiry = await Enquiries.objects.acreate(user=user, post=reciever, created=timezone.now())
                 if await Room.objects.filter(Q(first_person=user, second_person=recieved_user) | Q(second_person=user, first_person=recieved_user)).aexists():
                     room = await Room.objects.aget(Q(first_person=user, second_person=recieved_user) | Q(second_person=user, first_person=recieved_user))
                     room_id = await sync_to_async(lambda: room.id)()
-                    if enquiry.created:
+                    if enquiry:
                         enquiry.room_id = room_id
                         await enquiry.asave()
                     return Response({'status':True, 'name': recieved_name, 'image':image, 'roomId': room_id})
                 room = await Room.objects.acreate(first_person=user, second_person=recieved_user, last_msg=encrypt_message("Tap to send message"))
-                if enquiry.created:
+                if enquiry:
                     enquiry.room_id = room.id
                     await enquiry.asave()
                 return Response({'status':True,'name': recieved_name, 'image':image, 'roomId':room.id})
