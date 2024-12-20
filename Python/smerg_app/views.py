@@ -1281,10 +1281,16 @@ class EnquiriesCounts(APIView):
                     if user_posts:
                         async for posts in SaleProfiles.objects.filter(user=user, id=request.GET.get('id')):
                             impression += posts.impressions
-                        today = timezone.localtime().date()
+                        today = timezone.localtime()
                         yesterday = today - timedelta(days=1)
-                        yesterday_enqs = await Enquiries.objects.filter(post__id=request.GET.get('id'), created_date=yesterday).acount()
-                        today_enqs = await Enquiries.objects.filter(post__id=request.GET.get('id'), created_date=today).acount()
+                        today_start = today.replace(hour=0, minute=0, second=0, microsecond=0)
+                        today_end = today_start + timedelta(days=1)
+                        
+                        # Get start and end of yesterday
+                        yesterday_start = yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
+                        yesterday_end = yesterday_start + timedelta(days=1)
+                        yesterday_enqs = await Enquiries.objects.filter(post__id=request.GET.get('id'), created__gte=yesterday_start, created__lt=yesterday_end).acount()
+                        today_enqs = await Enquiries.objects.filter(post__id=request.GET.get('id'), created__gte=today_start, created__lt=today_end).acount()
                         total_enqs = await Enquiries.objects.filter(post__id=request.GET.get('id')).acount()
                         return Response({'status': True, 'impressions':impression, 'today_count': today_enqs, 'yesterday_count': yesterday_enqs, 'total_count': total_enqs})
                     return Response({'status': False, 'message': 'User has not added any posts in the requested type'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
