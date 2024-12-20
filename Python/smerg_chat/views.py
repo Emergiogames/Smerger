@@ -10,6 +10,7 @@ from smerg_app.utils.async_serial_utils import *
 from smerg_app.utils.check_utils import *
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.utils import timezone
 
 # Rooms
 class Rooms(APIView):
@@ -40,7 +41,7 @@ class Rooms(APIView):
                     image = recieved_image.url 
                 else: 
                     image = None
-                enquiry = await Enquiries.objects.acreate(user=user, post=reciever)
+                enquiry = await Enquiries.objects.acreate(user=user, post=reciever, created=timezone.now())
                 if await Room.objects.filter(Q(first_person=user, second_person=recieved_user) | Q(second_person=user, first_person=recieved_user)).aexists():
                     room = await Room.objects.aget(Q(first_person=user, second_person=recieved_user) | Q(second_person=user, first_person=recieved_user))
                     room_id = await sync_to_async(lambda: room.id)()
