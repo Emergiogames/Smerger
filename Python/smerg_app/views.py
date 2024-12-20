@@ -1282,8 +1282,8 @@ class EnquiriesCounts(APIView):
                             impression += posts.impressions
                         today = timezone.localtime().date()
                         yesterday = today - timedelta(days=1)
-                        yesterday_enqs = await Enquiries.objects.filter(post__id=request.GET.get('id'), created__date=yesterday).acount()
-                        today_enqs = await Enquiries.objects.filter(post__id=request.GET.get('id'), created__date=today).acount()
+                        yesterday_enqs = await Enquiries.objects.annotate(created_date=TruncDate('created')).filter(post__id=request.GET.get('id'), created_date=yesterday).acount()
+                        today_enqs = await Enquiries.objects.annotate(created_date=TruncDate('created')).filter(post__id=request.GET.get('id'), created_date=today).acount()
                         total_enqs = await Enquiries.objects.filter(post__id=request.GET.get('id')).acount()
                         return Response({'status': True, 'impressions':impression, 'today_count': today_enqs, 'yesterday_count': yesterday_enqs, 'total_count': total_enqs})
                     return Response({'status': False, 'message': 'User has not added any posts in the requested type'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
