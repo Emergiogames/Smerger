@@ -303,6 +303,7 @@ class Activity(models.Model):
 class Enquiries(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True)
     post = models.ForeignKey(SaleProfiles, on_delete=models.CASCADE)
+    room_id = models.IntegerField(default=0)
     created = models.DateTimeField(auto_now=True)
 
 # Report model
