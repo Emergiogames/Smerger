@@ -194,7 +194,6 @@ class RoomConsumer(AsyncWebsocketConsumer):
             "total_unread": total_first + total_second,
             "total_noti": await Notification.objects.filter(user=user).exclude(read_by=user).acount()
         }
-        print(f"For User {user} room_data is {room_data} with {total_first} & {total_second}")
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -224,7 +223,6 @@ class RoomConsumer(AsyncWebsocketConsumer):
 
 class NotiConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        print('Connected')
         token = self.scope['query_string'].decode().split('=')[-1]
         if not token:
             await self.close()
@@ -232,13 +230,18 @@ class NotiConsumer(AsyncWebsocketConsumer):
         exists, self.user = await check_user(token)
         self.user_id = self.user.id
         self.room_group_name = f'noti_updates_{self.user_id}'
-        print(self.room_group_name)
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
+        print('Connected')
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
     async def notification(self, event):
-        print('Notification', event['noti'])
-        await self.send(text_data=event['noti'])
+        notification = event['notification']
+        await self.send(
+            text_data=json.dumps({
+                'type': self.room_group_name,
+                'notification': notification
+            })
+        )

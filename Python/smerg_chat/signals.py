@@ -52,45 +52,18 @@ def notify_update(sender, instance, action, **kwargs):
             group_name = f'noti_updates_{user.id}'
             async_to_sync(channel_layer.group_send)(
                 group_name,
-                notification_data
+                {
+                    'type': 'room_message',
+                    'room_data': {
+                        'type': group_name,
+                        'notification': {
+                            'title': str(instance.title),  # Convert to string to ensure serialization
+                            'description': str(instance.description),
+                            'id': instance.id,
+                        }
+                    }
+                }
             )
-    # print("Signal called", instance, instance.title)
-    # channel_layer = get_channel_layer()
-    # users = instance.user.all()
-    # if not users.exists():
-    #     print("No users found for notification")
-    #     return
-    # print(users)
-    # notification_data = {
-    #     'type': 'notification',
-    #     'noti': {
-    #         'title': str(instance.title),  # Convert to string to ensure serialization
-    #         'description': str(instance.description),
-    #         'created': created,
-    #         'id': instance.id,
-    #     }
-    # }
-    # for user in users:
-    #     print(user, user.id)
-    #     group_name = f'noti_updates_{user.id}'
-    #     async_to_sync(channel_layer.group_send)(
-    #         group_name,
-    #         notification_data
-    #     )
-    # for users in instance.users.all().iterator():
-    #     noti_data = {
-    #         'is_read': instance.read_by.filter(id=users.id).exists(),
-    #         
-    #     }
-    #     print(noti_data, users.id)
-    #     group_name = f''
-    #     async_to_sync(channel_layer.group_send)(
-    #         group_name,
-    #         {
-    #             'type': 'notification',
-    #             'noti': noti_data
-    #         }
-    #     )
 
 @receiver(post_save, sender=ChatMessage)
 def send_noti(sender, instance, created, **kwargs):
