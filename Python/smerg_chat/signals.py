@@ -41,15 +41,17 @@ def notify_update(sender, instance, action, **kwargs):
         for user in users:
             print(user, user.id)
             group_name = f'noti_updates_{user.id}'
-            group_name = f'noti_updates_{user.id}'
             async_to_sync(channel_layer.group_send)(
                 group_name,
                 {
-                    'type': 'notification',  # Must match the method name in NotiConsumer
+                    'type': 'notification',
                     'notification': {
-                        'title': str(instance.title),  # Convert to string to ensure serialization
-                        'description': str(instance.description),
                         'id': instance.id,
+                        'title': str(instance.title),
+                        'description': str(instance.description),
+                        'image': instance.image.url if instance.image else None,
+                        'url': instance.url,
+                        'created': instance.created_on.strftime('%Y-%m-%d %H:%M:%S')
                     }
                 }
             )
@@ -59,5 +61,21 @@ def send_noti(sender, instance, created, **kwargs):
     if created:
         room = Room.objects.get(id=instance.room.id)
         recieved = instance.sended_to
+
+        ## Sending notification to Mobile
         if recieved.onesignal_id:
             send_notifications(instance.message, instance.sended_by.first_name, recieved.onesignal_id)
+
+        ## Sending notification to Web
+        channel_layer = get_channel_layer()
+        group_name = f'noti_updates_{recieved.id}'
+        async_to_sync(channel_layer.group_send)(
+            group_name,
+            {
+                'type': 'notification',
+                'notification': {
+                    'title': f"You have a new message from {instance.sended_by.first_name}",
+                    'description': instance.message,
+                }
+            }
+        )
