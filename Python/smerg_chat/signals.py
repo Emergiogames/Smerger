@@ -28,7 +28,7 @@ def notify_room_update(sender, instance, **kwargs):
         }
     )
 
-@receiver(m2m_changed, sender=Notification)
+@receiver(m2m_changed, sender=Notification.user.through)
 def notify_update(sender, instance, action, **kwargs):
     if action == 'post_add':
         print("Notification added")
