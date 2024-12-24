@@ -38,7 +38,7 @@ def notify_update(sender, instance, **kwargs):
             f'noti_updates_{user.id}',
             {
                 'type': 'notification',
-                'room_data': {
+                'noti': {
                     'title': instance.title,
                     'description': instance.description,
                 }
