@@ -41,17 +41,15 @@ def notify_update(sender, instance, action, **kwargs):
         for user in users:
             print(user, user.id)
             group_name = f'noti_updates_{user.id}'
+            group_name = f'noti_updates_{user.id}'
             async_to_sync(channel_layer.group_send)(
                 group_name,
                 {
-                    'type': 'room_message',
-                    'room_data': {
-                        'type': group_name,
-                        'notification': {
-                            'title': str(instance.title),  # Convert to string to ensure serialization
-                            'description': str(instance.description),
-                            'id': instance.id,
-                        }
+                    'type': 'notification',  # Must match the method name in NotiConsumer
+                    'notification': {
+                        'title': str(instance.title),  # Convert to string to ensure serialization
+                        'description': str(instance.description),
+                        'id': instance.id,
                     }
                 }
             )
