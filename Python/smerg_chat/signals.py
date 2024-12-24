@@ -43,7 +43,7 @@ def notify_update(sender, instance, action, **kwargs):
             'noti': {
                 'title': str(instance.title),  # Convert to string to ensure serialization
                 'description': str(instance.description),
-                'created': instance.created,
+                # 'created': instance.created,
                 'id': instance.id,
             }
         }
