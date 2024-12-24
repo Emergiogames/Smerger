@@ -10,9 +10,24 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", 'smerger.settings')
 # chatapp.settings.configure()
 
 
-application = ProtocolTypeRouter({
-    'http':get_asgi_application(),
-    'websocket':AuthMiddlewareStack(
+class DebugMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        print(f"Incoming connection to: {scope['type']} {scope.get('path', '')}")
+        return await self.app(scope, receive, send)
+
+application = DebugMiddleware(ProtocolTypeRouter({
+    'http': get_asgi_application(),
+    'websocket': AuthMiddlewareStack(
         URLRouter(smerg_chat.routing.websocket_urlpatterns)
     )
-})
+}))
+
+# application = ProtocolTypeRouter({
+#     'http':get_asgi_application(),
+#     'websocket':AuthMiddlewareStack(
+#         URLRouter(smerg_chat.routing.websocket_urlpatterns)
+#     )
+# })
