@@ -30,23 +30,32 @@ def notify_room_update(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Notification)
 def notify_update(sender, instance, **kwargs):
-    print("Signal called")
+    print("Signal called", instance.user, instance.title)
     channel_layer = get_channel_layer()
-    for users in instance.user.all().iterator():
-        noti_data = {
-            'is_read': instance.read_by.filter(id=users.id).exists(),
-            'title': instance.title,
-            'description': instance.description,
-        }
-        print(noti_data, users.id)
-        group_name = f'noti_updates_{users.id}'
-        async_to_sync(channel_layer.group_send)(
-            group_name,
-            {
-                'type': 'notification',
-                'noti': noti_data
+    async_to_sync(channel_layer.group_send)(
+        f'noti_updates_{instance.user.id}',
+        {
+            'type': 'notification',
+            'room_data': {
+                'title': instance.title,
+                'description': instance.description,
             }
-        )
+        }
+    )
+    # for users in instance.users.all().iterator():
+    #     noti_data = {
+    #         'is_read': instance.read_by.filter(id=users.id).exists(),
+    #         
+    #     }
+    #     print(noti_data, users.id)
+    #     group_name = f''
+    #     async_to_sync(channel_layer.group_send)(
+    #         group_name,
+    #         {
+    #             'type': 'notification',
+    #             'noti': noti_data
+    #         }
+    #     )
 
 @receiver(post_save, sender=ChatMessage)
 def send_noti(sender, instance, created, **kwargs):
