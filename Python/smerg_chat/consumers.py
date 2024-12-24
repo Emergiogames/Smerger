@@ -239,10 +239,5 @@ class NotiConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
     async def notification(self, event):
-        notification = event['noti']
-        print('Notification', notification)
-        await self.send(
-            text_data=json.dumps({
-                'notification': notification
-            })
-        )
+        print('Notification', event['noti'])
+        await self.send(text_data=event['noti'])
