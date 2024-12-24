@@ -32,17 +32,26 @@ def notify_room_update(sender, instance, **kwargs):
 def notify_update(sender, instance, **kwargs):
     print("Signal called", instance, instance.title)
     channel_layer = get_channel_layer()
-    for user in instance.user.all():
+    users = instance.user.all()
+    if not users.exists():
+        print("No users found for notification")
+        return
+    print(users)
+    notification_data = {
+        'type': 'notification',
+        'noti': {
+            'title': str(instance.title),  # Convert to string to ensure serialization
+            'description': str(instance.description),
+            'created': created,
+            'id': instance.id,
+        }
+    }
+    for user in users:
         print(user, user.id)
+        group_name = f'noti_updates_{user.id}'
         async_to_sync(channel_layer.group_send)(
-            f'noti_updates_{user.id}',
-            {
-                'type': 'notification',
-                'noti': {
-                    'title': instance.title,
-                    'description': instance.description,
-                }
-            }
+            group_name,
+            notification_data
         )
     # for users in instance.users.all().iterator():
     #     noti_data = {
