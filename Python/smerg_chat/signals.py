@@ -29,7 +29,7 @@ def notify_room_update(sender, instance, **kwargs):
     )
 
 @receiver(m2m_changed, sender=Notification)
-def notify_update(sender, instance, **kwargs):
+def notify_update(sender, instance, action, **kwargs):
     print("Signal called", instance, instance.title)
     channel_layer = get_channel_layer()
     users = instance.user.all()

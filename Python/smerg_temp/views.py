@@ -428,7 +428,7 @@ class Notifications(APIView):
     def post(self,request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
-                mutable_data = request.data.copy()
+                mutable_data = request.data
                 if mutable_data.get('userId') != "all":
                     user = UserProfile.objects.get(id=mutable_data.get('userId'))
                     mutable_data['user'] = user.id
@@ -436,10 +436,8 @@ class Notifications(APIView):
                 if serializer.is_valid():
                     noti = serializer.save()
                     if mutable_data.get('userId') == "all":
-                        all_user_ids = [user.id for user in UserProfile.objects.all()]
-                        users = UserProfile.objects.filter(id__in=all_user_ids)
+                        users = UserProfile.objects.all()
                         noti.user.set(users)
-                        noti.save()
                     return Response({'status':True})
                 return Response(serializer.errors)
             return Response({'status':False,'message': 'User doesnot exist'})
