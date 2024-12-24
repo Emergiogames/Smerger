@@ -38,15 +38,6 @@ def notify_update(sender, instance, action, **kwargs):
             print("No users found for notification")
             return
         print(users)
-        notification_data = {
-            'type': 'notification',
-            'noti': {
-                'title': str(instance.title),  # Convert to string to ensure serialization
-                'description': str(instance.description),
-                # 'created': instance.created,
-                'id': instance.id,
-            }
-        }
         for user in users:
             print(user, user.id)
             group_name = f'noti_updates_{user.id}'
