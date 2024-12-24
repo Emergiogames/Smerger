@@ -428,7 +428,7 @@ class Notifications(APIView):
     def post(self,request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
-                mutable_data = request.data
+                mutable_data = request.data.copy()
                 if mutable_data.get('userId') != "all":
                     user = UserProfile.objects.get(id=mutable_data.get('userId'))
                     mutable_data['user'] = user.id
