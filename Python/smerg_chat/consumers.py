@@ -224,6 +224,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
 
 class NotiConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        print('Connected')
         token = self.scope['query_string'].decode().split('=')[-1]
         if not token:
             await self.close()
@@ -231,9 +232,9 @@ class NotiConsumer(AsyncWebsocketConsumer):
         exists, self.user = await check_user(token)
         self.user_id = self.user.id
         self.room_group_name = f'noti_updates_{self.user_id}'
+        print(self.room_group_name)
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
-        print('Connected')
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)

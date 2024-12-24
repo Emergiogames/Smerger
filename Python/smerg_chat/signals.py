@@ -30,6 +30,7 @@ def notify_room_update(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Notification)
 def notify_update(sender, instance, **kwargs):
+    print("Signal called")
     channel_layer = get_channel_layer()
     for users in instance.user.all().iterator():
         noti_data = {
