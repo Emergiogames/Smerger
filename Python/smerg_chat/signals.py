@@ -33,7 +33,7 @@ def notify_update(sender, instance, **kwargs):
     print("Signal called", instance, instance.title)
     channel_layer = get_channel_layer()
     for user in instance.user.all():
-        print(user)
+        print(user, user.id)
         async_to_sync(channel_layer.group_send)(
             f'noti_updates_{user.id}',
             {
