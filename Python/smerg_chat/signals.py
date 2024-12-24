@@ -31,12 +31,13 @@ def notify_room_update(sender, instance, **kwargs):
 @receiver(post_save, sender=Notification)
 def notify_update(sender, instance, **kwargs):
     channel_layer = get_channel_layer()
-    for users in instance.user.all():
+    for users in instance.user.all().iterator():
         noti_data = {
             'is_read': instance.read_by.filter(id=users.id).exists(),
             'title': instance.title,
             'description': instance.description,
         }
+        print(noti_data, users.id)
         group_name = f'noti_updates_{users.id}'
         async_to_sync(channel_layer.group_send)(
             group_name,
