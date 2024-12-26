@@ -281,9 +281,9 @@ class BusinessList(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
+                request.data['user'] = user.id
+                request.data['entity_type'] = 'business'
                 data = request.data
-                data['user'] = user.id
-                data['entity_type'] = 'business'
                 industry = data.get('industry', 'industry')
                 sale = data.get('type_sale', 'sale')
                 city = data.get('city', '...')
