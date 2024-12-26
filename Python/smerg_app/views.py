@@ -284,10 +284,10 @@ class BusinessList(APIView):
                 data = request.data
                 data['user'] = user.id
                 data['entity_type'] = 'business'
-                industry = data['industry'] if data['industry'] else 'industry'
-                sale = data['type_sale'] if data['type_sale'] else 'sale'
-                city = data['city'] if data['city'] else '...'
-                state = data['state'] if data['state'] else '...'
+                industry = data.get('industry', 'industry')
+                sale = data.get('type_sale', 'sale')
+                city = data.get('city', '...')
+                state = data.get('state', '...')
                 data['title'] = f'{industry} for {sale} in {city}, {state}'
                 subscribed = await check_subscription(user, "business")
                 if subscribed:
