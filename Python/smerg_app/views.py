@@ -619,7 +619,7 @@ class Search(APIView):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
                 if request.GET.get('filter') == "false":
-                    search = [posts async for posts in SaleProfiles.objects.filter(Q(name__icontains=request.GET.get('query')) | Q(company__icontains=request.GET.get('query')), verified=True)]
+                    search = [posts async for posts in SaleProfiles.objects.filter(Q(title__icontains=request.GET.get('query')) | Q(single_desc__icontains=request.GET.get('query')), verified=True)]
                 else:
                     query = Q()
                     query = Q(name__icontains=request.GET.get('query')) | Q(company__icontains=request.GET.get('query')) & Q(verified=True)
