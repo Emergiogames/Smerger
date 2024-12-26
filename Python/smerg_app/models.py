@@ -69,13 +69,13 @@ class SaleProfiles(models.Model):
     ]
 
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    title = models.TextField(default='')
-    single_desc = models.TextField(default='')
+    title = models.TextField(default='', null=True, blank=True)
+    single_desc = models.TextField(default='', null=True, blank=True)
     entity_type = models.CharField(max_length=50, choices=ENTITY_TYPE_CHOICES)
     name = models.CharField(max_length=100)
-    description = models.TextField()
+    description = models.TextField(null=True, blank=True)
     impressions = models.IntegerField(default=0)
-    created_at = models.DateField(auto_now_add=True,null=True)
+    created_at = models.DateField(auto_now=True, null=True)
 
     # Common fields
     industry = models.CharField(max_length=100, null=True, blank=True)

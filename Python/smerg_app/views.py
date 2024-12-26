@@ -284,7 +284,11 @@ class BusinessList(APIView):
                 data = request.data
                 data['user'] = user.id
                 data['entity_type'] = 'business'
-                data['title'] = f'{data['industry']} for {data['type_sale']} in {data['city']}, {data['state']}'
+                industry = data['industry'] if data['industry'] else 'industry'
+                sale = data['type_sale'] if data['type_sale'] else 'sale'
+                city = data['city'] if data['city'] else '...'
+                state = data['state'] if data['state'] else '...'
+                data['title'] = f'{industry} for {sale} in {city}, {state}'
                 subscribed = await check_subscription(user, "business")
                 if subscribed:
                     data['subscribed'] = True
@@ -356,8 +360,13 @@ class InvestorList(APIView):
                 data = request.data
                 data['user'] = user.id
                 data['entity_type'] = 'investor'
-                data['title'] = f'{data['designation']}, {data['industry']}, {data['preference'][0]}, {data['city']}, {data['state']}'
-                data['single_desc'] = f'{data['preference'][0]} in {data['city']}, {data['state']}'
+                industry = data['industry'] if data['industry'] else 'industry'
+                designation = data['designation'] if data['designation'] else 'designation'
+                sale = data['type_sale'] if data['type_sale'] else 'sale'
+                city = data['city'] if data['city'] else '...'
+                state = data['state'] if data['state'] else '...'
+                data['title'] = f'{designation}, {industry}, {data['preference'][0] if data['preference'] else "Investment"}, {city}, {state}'
+                data['single_desc'] = f'{data['preference'][0] if data['preference'] else "Investment"} in {city}, {state}'
                 subscribed = await check_subscription(user, "investor")
                 if subscribed:
                     data['subscribed'] = True
@@ -430,8 +439,10 @@ class FranchiseList(APIView):
                 data = request.data
                 data['user'] = user.id
                 data['entity_type'] = 'franchise'
-                data['title'] = f'{data['industry']} {data['offering']}'
-                data['single_desc'] = f'{data['company']}, Established in {data['establish_yr']}, {data['total_outlets']} Franchises, {data['state']}'
+                industry = data['industry'] if data['industry'] else 'industry'
+                state = data['state'] if data['state'] else '...'
+                data['title'] = f'{industry} {data['offering'] if data['offering'] else "Offering"} in {state}'
+                data['single_desc'] = f'{data['company'] if data['company'] else "Company"}, Established in {data['establish_yr'] if data['establish_yr'] else "2000"}, {data['total_outlets'] if data['total_outlets'] else "1"} Franchises, {state}'
                 subscribed = await check_subscription(user, "franchise")
                 if subscribed:
                     data['subscribed'] = True
@@ -501,8 +512,10 @@ class AdvisorList(APIView):
                 data = request.data
                 data['user'] = user.id
                 data['entity_type'] = 'advisor'
-                data['title'] = f'{data['designation']}, Financial Advisor, {data['city']}, {data['state']}'
-                data['single_desc'] = f'Advisor in {data['city']}, {data['state']}'
+                city = data['city'] if data['city'] else '...'
+                state = data['state'] if data['state'] else '...'
+                data['title'] = f'{data['designation'] if data['designation'] else 'Advisor'}, Financial Advisor, {city}, {state}'
+                data['single_desc'] = f'Advisor in {city}, {state}'
                 subscribed = await check_subscription(user, "franchise")
                 if subscribed:
                     data['subscribed'] = True
