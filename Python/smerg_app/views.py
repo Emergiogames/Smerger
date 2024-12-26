@@ -42,8 +42,8 @@ class LoginView(APIView):
         if exists:
             if check_password(request.data.get('password'), user.password):
                 if not user.block and not user.deactivate:
-                        token = await Token.objects.aget(user=user)
-                        return Response({'status':True, 'token':token.key}, status=status.HTTP_200_OK)
+                    token = await Token.objects.aget(user=user)
+                    return Response({'status':True, 'token':token.key}, status=status.HTTP_200_OK)
                 return Response({'status':False,'message': 'User Blocked/ Account deactivated'}, status=status.HTTP_403_FORBIDDEN)
         return Response({'status':False,'message': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -281,9 +281,14 @@ class BusinessList(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                data = request.data
+                data = request.data.copy()
                 data['user'] = user.id
                 data['entity_type'] = 'business'
+                industry = data.get('industry', 'industry')
+                sale = data.get('type_sale', 'sale')
+                city = data.get('city', '...')
+                state = data.get('state', '...')
+                data['title'] = f'{industry} for {sale} in {city}, {state}'
                 subscribed = await check_subscription(user, "business")
                 if subscribed:
                     data['subscribed'] = True
@@ -353,10 +358,15 @@ class InvestorList(APIView):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
                 data = request.data
-                # request.data['user'] = user.id
-                # request.data['entity_type'] = 'investor'
                 data['user'] = user.id
                 data['entity_type'] = 'investor'
+                industry = data['industry'] if data['industry'] else 'industry'
+                designation = data['designation'] if data['designation'] else 'designation'
+                sale = data['type_sale'] if data['type_sale'] else 'sale'
+                city = data['city'] if data['city'] else '...'
+                state = data['state'] if data['state'] else '...'
+                data['title'] = f'{designation}, {industry}, {data['preference'][0] if data['preference'] else "Investment"}, {city}, {state}'
+                data['single_desc'] = f'{data['preference'][0] if data['preference'] else "Investment"} in {city}, {state}'
                 subscribed = await check_subscription(user, "investor")
                 if subscribed:
                     data['subscribed'] = True
@@ -429,9 +439,13 @@ class FranchiseList(APIView):
                 data = request.data
                 data['user'] = user.id
                 data['entity_type'] = 'franchise'
-                # subscribed = await check_subscription(user, "franchise")
-                # if subscribed:
-                #     data['subscribed'] = True
+                industry = data['industry'] if data['industry'] else 'industry'
+                state = data['state'] if data['state'] else '...'
+                data['title'] = f'{industry} {data['offering'] if data['offering'] else "Offering"} in {state}'
+                data['single_desc'] = f'{data['company'] if data['company'] else "Company"}, Established in {data['establish_yr'] if data['establish_yr'] else "2000"}, {data['total_outlets'] if data['total_outlets'] else "1"} Franchises, {state}'
+                subscribed = await check_subscription(user, "franchise")
+                if subscribed:
+                    data['subscribed'] = True
                 saved, resp = await create_serial(SaleProfilesSerial, data)
                 print(resp)
                 if saved:
@@ -498,6 +512,10 @@ class AdvisorList(APIView):
                 data = request.data
                 data['user'] = user.id
                 data['entity_type'] = 'advisor'
+                city = data['city'] if data['city'] else '...'
+                state = data['state'] if data['state'] else '...'
+                data['title'] = f'{data['designation'] if data['designation'] else 'Advisor'}, Financial Advisor, {city}, {state}'
+                data['single_desc'] = f'Advisor in {city}, {state}'
                 subscribed = await check_subscription(user, "franchise")
                 if subscribed:
                     data['subscribed'] = True
@@ -553,9 +571,9 @@ class UserView(APIView):
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
     @swagger_auto_schema(operation_description="Update details of the logged-in user.",
-        request_body=openapi.Schema(type=openapi.TYPE_OBJECT,properties={'username': openapi.Schema(type=openapi.TYPE_STRING, description="Updated username of the user"),'email': openapi.Schema(type=openapi.TYPE_STRING, description="Updated email of the user"),
-        'other_field': openapi.Schema(type=openapi.TYPE_STRING, description="Other fields as required"),}),
-        responses={200: "{'status': True, 'message': 'User updated successfully'}",403: "{'status': False, 'message': 'User does not exist'}",400: "Returns validation errors or {'status': False, 'message': 'Token is not passed'}",})
+    request_body=openapi.Schema(type=openapi.TYPE_OBJECT,properties={'username': openapi.Schema(type=openapi.TYPE_STRING, description="Updated username of the user"),'email': openapi.Schema(type=openapi.TYPE_STRING, description="Updated email of the user"),
+    'other_field': openapi.Schema(type=openapi.TYPE_STRING, description="Other fields as required"),}),
+    responses={200: "{'status': True, 'message': 'User updated successfully'}",403: "{'status': False, 'message': 'User does not exist'}",400: "Returns validation errors or {'status': False, 'message': 'Token is not passed'}",})
     async def patch(self,request):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
@@ -563,8 +581,14 @@ class UserView(APIView):
                 already_exists = await UserProfile.objects.filter(Q(username=request.data.get('phone'))|Q(email=request.data.get('email'))& ~Q(id=user.id)).aexists() 
                 if already_exists:
                     return Response({'status':False,'message': 'User with same details already exists'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-                # mutable_data = request.data
-                saved, resp = await update_serial(UserSerial, request.data, user)
+                data = request.data.copy()
+                if await AadhaarDetails.objects.filter(user=user).aexists():
+                    details = await AadhaarDetails.objects.aget(user=user)
+                    name = await sync_to_async(lambda: details.name)()
+                    if data["first_name"].lower() != name.lower():
+                        return Response({'status': False, 'message': 'Data not matching'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+                    data['verified'] = True
+                saved, resp = await update_serial(UserSerial, data, user)
                 if saved:
                     return Response({'status':True,'message': 'User updated successfully'}, status=status.HTTP_201_CREATED)
                 return Response(resp)
@@ -595,7 +619,7 @@ class Search(APIView):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
                 if request.GET.get('filter') == "false":
-                    search = [posts async for posts in SaleProfiles.objects.filter(Q(name__icontains=request.GET.get('query')) | Q(company__icontains=request.GET.get('query')), verified=True)]
+                    search = [posts async for posts in SaleProfiles.objects.filter(Q(title__icontains=request.GET.get('query')) | Q(single_desc__icontains=request.GET.get('query')), verified=True)]
                 else:
                     query = Q()
                     query = Q(name__icontains=request.GET.get('query')) | Q(company__icontains=request.GET.get('query')) & Q(verified=True)
@@ -1269,10 +1293,16 @@ class EnquiriesCounts(APIView):
                     if user_posts:
                         async for posts in SaleProfiles.objects.filter(user=user, id=request.GET.get('id')):
                             impression += posts.impressions
-                        today = timezone.now().date()
+                        today = timezone.localtime()
                         yesterday = today - timedelta(days=1)
-                        yesterday_enqs = await Enquiries.objects.filter(post__id=request.GET.get('id'), created__date=yesterday).acount()
-                        today_enqs = await Enquiries.objects.filter(post__id=request.GET.get('id'), created__date=today).acount()
+                        today_start = today.replace(hour=0, minute=0, second=0, microsecond=0)
+                        today_end = today_start + timedelta(days=1)
+                        
+                        # Get start and end of yesterday
+                        yesterday_start = yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
+                        yesterday_end = yesterday_start + timedelta(days=1)
+                        yesterday_enqs = await Enquiries.objects.filter(post__id=request.GET.get('id'), created__gte=yesterday_start, created__lt=yesterday_end).acount()
+                        today_enqs = await Enquiries.objects.filter(post__id=request.GET.get('id'), created__gte=today_start, created__lt=today_end).acount()
                         total_enqs = await Enquiries.objects.filter(post__id=request.GET.get('id')).acount()
                         return Response({'status': True, 'impressions':impression, 'today_count': today_enqs, 'yesterday_count': yesterday_enqs, 'total_count': total_enqs})
                     return Response({'status': False, 'message': 'User has not added any posts in the requested type'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -1330,12 +1360,10 @@ class AadharInfo(APIView):
                     saved, resp = await create_serial(AadhaarSerial, data)
                     if saved:
                         aadhar_name = resp.name
-                # profile = await Profile.objects.select_related('user').filter(user=user).order_by('-created_at').aget()
-                # profile = await UserProfile.objects.aget(user=user)
-                if profile.name.lower() != user.first_name.lower():
-                    await profile.adelete()
+                if data['name'].lower() != user.first_name.lower():
                     return Response({'status': False, 'message': 'Data not matching'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-                await Profile.objects.filter(user=user).aupdate(aadhar_verified=False)
+                user.verified = True
+                await user.asave()
                 return Response({'status': True, 'message': 'Aadhaar data saved successfully'}, status=status.HTTP_201_CREATED)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)

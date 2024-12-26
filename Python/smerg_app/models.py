@@ -37,6 +37,7 @@ class UserProfile(AbstractUser):
     inactive_from = models.DateTimeField(null=True, blank=True)
     deactivate = models.BooleanField(default=False)
     deactivated_on = models.DateField(null=True, blank=True)
+    verified = models.BooleanField(default=False) ## Aadhar verification
 
     objects = CustomUserManager()
 
@@ -68,11 +69,13 @@ class SaleProfiles(models.Model):
     ]
 
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    title = models.TextField(default='', null=True, blank=True)
+    single_desc = models.TextField(default='', null=True, blank=True)
     entity_type = models.CharField(max_length=50, choices=ENTITY_TYPE_CHOICES)
     name = models.CharField(max_length=100)
-    description = models.TextField()
+    description = models.TextField(null=True, blank=True)
     impressions = models.IntegerField(default=0)
-    created_at = models.DateField(auto_now_add=True,null=True)
+    created_at = models.DateField(auto_now=True, null=True)
 
     # Common fields
     industry = models.CharField(max_length=100, null=True, blank=True)
@@ -148,8 +151,10 @@ class SaleProfiles(models.Model):
     proof2 = models.FileField(storage=MediaStorage(), upload_to='combined/proof', null=True, blank=True)
     proof3 = models.FileField(storage=MediaStorage(), upload_to='combined/proof', null=True, blank=True)
     proof4 = models.FileField(storage=MediaStorage(), upload_to='combined/proof', null=True, blank=True)
+
+    # Booleens
     block = models.BooleanField(default=False)
-    verified = models.BooleanField(default=False)
+    verified = models.BooleanField(default=False) ## Admin verification
     subcribed = models.BooleanField(default=False)
 
     def __str__(self):
@@ -291,14 +296,15 @@ class Notification(models.Model):
 class Activity(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True)
     post = models.ForeignKey(SaleProfiles, on_delete=models.CASCADE)
-    created = models.DateTimeField(auto_now_add=True)
+    created = models.DateTimeField(auto_now=True)
     count = models.PositiveIntegerField(default=1,null=True)
 
 # Enquiries on a post
 class Enquiries(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True)
     post = models.ForeignKey(SaleProfiles, on_delete=models.CASCADE)
-    created = models.DateTimeField(auto_now_add=True)
+    room_id = models.IntegerField(default=0, null=True, blank=True)
+    created = models.DateTimeField(auto_now=True)
 
 # Report model
 class Report(models.Model):

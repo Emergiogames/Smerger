@@ -436,10 +436,8 @@ class Notifications(APIView):
                 if serializer.is_valid():
                     noti = serializer.save()
                     if mutable_data.get('userId') == "all":
-                        all_user_ids = [user.id for user in UserProfile.objects.all()]
-                        users = UserProfile.objects.filter(id__in=all_user_ids)
+                        users = UserProfile.objects.all()
                         noti.user.set(users)
-                        noti.save()
                     return Response({'status':True})
                 return Response(serializer.errors)
             return Response({'status':False,'message': 'User doesnot exist'})
