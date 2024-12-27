@@ -361,11 +361,10 @@ class InvestorList(APIView):
                 data['user'] = user.id
                 data['entity_type'] = 'investor'
                 industry = data['industry'] if data['industry'] else 'industry'
-                designation = data['designation'] if data['designation'] else 'designation'
                 sale = data['type_sale'] if data['type_sale'] else 'sale'
                 city = data['city'] if data['city'] else '...'
                 state = data['state'] if data['state'] else '...'
-                data['title'] = f'{designation}, {industry}, {data['preference'][0] if data['preference'] else "Investment"}, {city}, {state}'
+                data['title'] = f'{industry}, {data['preference'][0] if data['preference'] else "Investment"}, {city}, {state}'
                 data['single_desc'] = f'{data['preference'][0] if data['preference'] else "Investment"} in {city}, {state}'
                 subscribed = await check_subscription(user, "investor")
                 if subscribed:
