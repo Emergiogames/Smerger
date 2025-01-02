@@ -33,9 +33,9 @@ def log_model_save(sender, instance, created, **kwargs):
     if created:
 
         # updating unsubscribed posts
-        posts = SaleProfiles.objects.filter(user=instance.user, entity_type=instance.plan.type, subcribed=False)[:instance.remaining_posts]
-        posts.update(subcribed=True)
+        posts = SaleProfiles.objects.filter(user=instance.user, entity_type=instance.plan.type, subcribed=False).values_list('id', flat=True)[:instance.remaining_posts]
+        SaleProfiles.objects.filter(id__in=post_ids).update(subcribed=True)
 
         # updating remaining posts count
-        instance.remaining_posts = max(0, instance.remaining_posts - first_remaining_profiles.count())
+        instance.remaining_posts = max(0, instance.remaining_posts - posts.count())
         instance.save()
