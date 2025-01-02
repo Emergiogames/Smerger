@@ -509,7 +509,7 @@ class AdvisorList(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                data = request.data
+                data = request.data.copy()
                 data['user'] = user.id
                 data['entity_type'] = 'advisor'
                 city = data.get('city', '...')

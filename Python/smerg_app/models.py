@@ -133,6 +133,7 @@ class SaleProfiles(models.Model):
     designation = models.CharField(max_length=100, null=True, blank=True)
     interested_industry = models.JSONField(null=True, blank=True)
     interested_location = models.JSONField(null=True, blank=True)
+    yr_experiance = models.IntegerField(null=True, blank=True)
     factors_looking = models.TextField(null=True, blank=True)
     about_company = models.TextField(null=True, blank=True)
     
