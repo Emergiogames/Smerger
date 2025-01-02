@@ -34,7 +34,7 @@ def log_model_save(sender, instance, created, **kwargs):
 
         # updating unsubscribed posts
         posts = SaleProfiles.objects.filter(user=instance.user, entity_type=instance.plan.type, subcribed=False).values_list('id', flat=True)[:instance.remaining_posts]
-        SaleProfiles.objects.filter(id__in=post_ids).update(subcribed=True)
+        SaleProfiles.objects.filter(id__in=posts).update(subcribed=True)
 
         # updating remaining posts count
         instance.remaining_posts = max(0, instance.remaining_posts - posts.count())
