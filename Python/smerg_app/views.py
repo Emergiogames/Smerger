@@ -529,7 +529,7 @@ class AdvisorList(APIView):
     @swagger_auto_schema(operation_description="Advisor updation",request_body=SaleProfilesSerial,
     responses={200: "{'status':True,'message': 'Advisor updated successfully'}",400:"Passes an error message"})
     async def patch(self,request,id):
-        if request.headers.get('token'):
+        if request.headers.get('token'): 
             exists, user = await check_user(request.headers.get('token'))
             if exists:
                 advisor = await SaleProfiles.objects.aget(id=id)
