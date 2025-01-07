@@ -119,12 +119,6 @@ class RegisterView(APIView):
                                 if response.status == 200:
                                     content = await response.read()
                                     await sync_to_async(user.image.save)(f'{user.username}_profile.jpg', ContentFile(content))
-
-                    # Get image from URL (Google, Facebook)
-                    # if request.data.get('images') is not None:
-                    #     response = requests.get(request.data.get('images'))
-                    #     if response.status_code == 200:
-                    #         user.image.save(f'{user.username}_profile.jpg', ContentFile(response.content))
                     return Response({'status':True,'token':token.key}, status=status.HTTP_201_CREATED)
                 return Response(user)
             return Response({'status':False,'message': 'Incorrect OTP'}, status=status.HTTP_400_BAD_REQUEST)
