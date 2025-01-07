@@ -11,7 +11,7 @@ def log_model_save(sender, instance, created, **kwargs):
 
         ## Generate room with admin for chatting
         admin = UserProfile.objects.filter(is_superuser=True).first()
-        message = "Welcome to Investryx! 🎉 We're thrilled to have you on board. Feel free to reach out to us anytime for assistance, guidance, or a friendly chat. Let's achieve great things together!"
+        message = "Welcome to Investryx! We're thrilled to have you on board. Feel free to reach out to us anytime for assistance, guidance, or a friendly chat. Let's achieve great things together!"
         room = Room.objects.create(first_person=instance, second_person=admin, last_msg=encrypt_message(message[:30]))
         ChatMessage.objects.create(sended_by=admin, sended_to=instance, message=encrypt_message(message), room=room)
 
