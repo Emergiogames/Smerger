@@ -434,7 +434,7 @@ class Notifications(APIView):
                     mutable_data['user'] = user.id
                 else:
                     users = UserProfile.objects.all()
-                    mutable_data['user'] = users.first()
+                    mutable_data['user'] = users.first().id
                 serializer = NotiSerial(data = mutable_data)
                 if serializer.is_valid():
                     noti = serializer.save()
