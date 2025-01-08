@@ -1059,6 +1059,7 @@ class Notifications(APIView):
         @sync_to_async
         def update_notification(notification, user):
             notification.read_by.add(user)
+            notification.save()
 
         for notification in notifications:
             await update_notification(notification, user)
