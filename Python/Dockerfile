@@ -9,11 +9,11 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /smerger
 
 # Install dependencies
-COPY requirements.txt /smerger/
+COPY Python/requirements.txt /smerger/
 RUN python -m pip install --upgrade pip && pip install -r requirements.txt
 
 # Copy the project code into the container
-COPY . /smerger/
+COPY Python/ /smerger/
 
 RUN pip install \
     gunicorn \
