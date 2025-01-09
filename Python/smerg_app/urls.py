@@ -3,6 +3,7 @@ from .views import *
 from . import views
 
 urlpatterns = [
+    
     path('login',LoginView.as_view()), # Login
     path('regotp',RegisterOtp.as_view()), # Register OTP
     path('register',RegisterView.as_view()), # User creation
