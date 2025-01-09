@@ -1039,7 +1039,7 @@ class Latest(APIView):
         return Response(serialized_data)
 
 # Notification
-class Notifications(APIView):
+class Notifications(APIView): 
     @swagger_auto_schema(operation_description="Notifications fetching",
     responses={200: "Notifications Details fetched succesfully",400:"Passes an error message"})
     async def get(self,request):
