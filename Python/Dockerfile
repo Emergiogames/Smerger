@@ -13,7 +13,7 @@ COPY Python/requirements.txt /smerger/
 RUN python -m pip install --upgrade pip && pip install -r requirements.txt
 
 # Copy the project code into the container
-COPY Python/ /smerger/
+COPY . /smerger/
 
 RUN pip install \
     gunicorn \
