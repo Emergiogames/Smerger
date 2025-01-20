@@ -272,7 +272,7 @@ class BusinessList(APIView):
         manual_parameters=[openapi.Parameter('id', openapi.IN_PATH,description="0 to fetch all business posts; otherwise, fetch user's business posts.",type=openapi.TYPE_INTEGER, required=True),])
     async def get(self,request,id):
         if id == 0:
-            businesses = [posts async for posts in SaleProfiles.objects.filter(entity_type='business', block=False, verified=True).order_by('-id')]
+            businesses = [posts async for posts in SaleProfiles.objects.filter(entity_type='business', block=False, verified=True, subscribed=True).order_by('-id')]
         else:
             exists, user = await check_user(request.headers.get('token'))
             if not exists:
@@ -348,7 +348,7 @@ class InvestorList(APIView):
         manual_parameters=[openapi.Parameter('id', openapi.IN_PATH,description="0 to fetch all verified investor profiles; otherwise, fetch user's investor profiles.", type=openapi.TYPE_INTEGER, required=True),])
     async def get(self,request,id):
         if id == 0:
-            investor = [posts async for posts in SaleProfiles.objects.filter(entity_type='investor', block=False, verified=True).order_by('-id')]
+            investor = [posts async for posts in SaleProfiles.objects.filter(entity_type='investor', block=False, verified=True, subscribed=True).order_by('-id')]
         else:
             exists, user = await check_user(request.headers.get('token'))
             if not exists:
@@ -426,7 +426,7 @@ class FranchiseList(APIView):
         manual_parameters=[openapi.Parameter('id', openapi.IN_PATH, description="0 to fetch all verified franchise profiles; otherwise, fetch user's franchise profiles.", type=openapi.TYPE_INTEGER, required=True),])
     async def get(self,request,id):
         if id == 0:
-            businesses = [posts async for posts in SaleProfiles.objects.filter(entity_type='franchise', block=False, verified=True).order_by('-id')]
+            businesses = [posts async for posts in SaleProfiles.objects.filter(entity_type='franchise', block=False, verified=True, subscribed=True).order_by('-id')]
         else:
             exists, user = await check_user(request.headers.get('token'))
             if not exists:
@@ -501,7 +501,7 @@ class AdvisorList(APIView):
     responses={200: "Advisor Details fetched succesfully",400:"Passes an error message"})
     async def get(self, request, id):
         if id == 0:
-            advisor = [posts async for posts in SaleProfiles.objects.filter(entity_type='advisor', block=False, verified=True).order_by('-id')]
+            advisor = [posts async for posts in SaleProfiles.objects.filter(entity_type='advisor', block=False, verified=True, subscribed=True).order_by('-id')]
         else:
             exists, user = await check_user(request.headers.get('token'))
             if not exists:
@@ -626,7 +626,7 @@ class Search(APIView):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
                 if request.GET.get('filter') == "false":
-                    search = [posts async for posts in SaleProfiles.objects.filter(Q(title__icontains=request.GET.get('query')) | Q(single_desc__icontains=request.GET.get('query')), verified=True)]
+                    search = [posts async for posts in SaleProfiles.objects.filter(Q(title__icontains=request.GET.get('query')) | Q(single_desc__icontains=request.GET.get('query')), verified=True, subscribed=True)]
                 else:
                     query = Q()
                     query = Q(name__icontains=request.GET.get('query')) | Q(company__icontains=request.GET.get('query')) & Q(verified=True)
@@ -652,7 +652,7 @@ class Search(APIView):
                         query &= Q(preference__contains=request.GET.get('preference '))
                     if request.GET.get('top_selling'):
                         query &= Q(top_selling__icontains=request.GET.get('top_selling'))
-                    search = [posts async for posts in SaleProfiles.objects.filter(query)]
+                    search = [posts async for posts in SaleProfiles.objects.filter(query).exclude(subscribed=False)]
                 serialized_data = await serialize_data(search, SaleProfilesSerial)
                 return Response({'status':True,'data':serialized_data}, status=status.HTTP_200_OK)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
@@ -915,15 +915,15 @@ class Recommended(APIView):
                         if preference.price_starting is not None:
                             query |= Q(range_ending__lte=preference.price_ending)
                     if request.GET.get('type'):
-                        query &= Q(entity_type=request.GET.get('type'), verified=True)
+                        query &= Q(entity_type=request.GET.get('type'), verified=True, subscribed=True)
                         products = [posts async for posts in SaleProfiles.objects.filter(query).order_by('-id')]
                         serialized_data = await serialize_data(products, SaleProfilesSerial)
                     else:
-                        query &= Q(verified=True)
+                        query &= Q(verified=True, subscribed=True)
                         products = [posts async for posts in SaleProfiles.objects.filter(query).order_by('-id')]
                         serialized_data = await serialize_data(products, SaleProfilesSerial)
                 else:
-                    products = [posts async for posts in SaleProfiles.objects.filter(verified=True).order_by('-id')[:10]]
+                    products = [posts async for posts in SaleProfiles.objects.filter(verified=True, subscribed=True).order_by('-id')[:10]]
                     serialized_data = await serialize_data(products, SaleProfilesSerial)
                 return Response(serialized_data)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1021,10 +1021,10 @@ class Featured(APIView):
     async def get(self,request):
         data = []
         if request.GET.get('type'):
-            product = SaleProfiles.objects.filter(entity_type=request.GET.get('type'), verified=True).order_by('-id')
+            product = SaleProfiles.objects.filter(entity_type=request.GET.get('type'), verified=True, subscribed=True).order_by('-id')
             serial = SaleProfilesSerial
         else:
-            product = SaleProfiles.objects.filter(verified=True)
+            product = SaleProfiles.objects.filter(verified=True, subscribed=True)
             serial = SaleProfilesSerial
         async for i in product:
             user_id = await sync_to_async(lambda: i.user)()
@@ -1043,10 +1043,10 @@ class Latest(APIView):
     responses={200: "Latest Posts Details fetched succesfully",400:"Passes an error message"})
     async def get(self,request):
         if request.GET.get('type'):
-            product = [post async for post in SaleProfiles.objects.filter(entity_type=request.GET.get('type'), verified=True).order_by('-id')[:10]]
+            product = [post async for post in SaleProfiles.objects.filter(entity_type=request.GET.get('type'), verified=True, subscribed=True).order_by('-id')[:10]]
             serial = SaleProfilesSerial
         else:
-            product = [post async for post in SaleProfiles.objects.filter(verified=True).order_by('-id')[:10]]
+            product = [post async for post in SaleProfiles.objects.filter(verified=True, subscribed=True).order_by('-id')[:10]]
             serial = SaleProfilesSerial
         serialized_data = await serialize_data(product, serial)
         return Response(serialized_data)
@@ -1094,9 +1094,9 @@ class Graph(APIView):
     @swagger_auto_schema(operation_description="Graph data fetching",
     responses={200: "Graph Details fetched succesfully",400:"Passes an error message"})
     async def get(self,request):
-        businessData = SaleProfiles.objects.filter(entity_type='business', verified=True).annotate(month=ExtractMonth("created_at")).values("month").annotate(total_rate=Sum("range_starting")).values("month", "total_rate")[:5]
-        investorData = SaleProfiles.objects.filter(entity_type='investor', verified=True).annotate(month=ExtractMonth("created_at")).values("month").annotate(total_rate=Sum("range_starting")).values("month", "total_rate")[:5]
-        franchiseData = SaleProfiles.objects.filter(entity_type='franchise', verified=True).annotate(month=ExtractMonth("created_at")).values("month").annotate(total_rate=Sum("range_starting")).values("month", "total_rate")[:5]
+        businessData = SaleProfiles.objects.filter(entity_type='business', verified=True, subscribed=True).annotate(month=ExtractMonth("created_at")).values("month").annotate(total_rate=Sum("range_starting")).values("month", "total_rate")[:5]
+        investorData = SaleProfiles.objects.filter(entity_type='investor', verified=True, subscribed=True).annotate(month=ExtractMonth("created_at")).values("month").annotate(total_rate=Sum("range_starting")).values("month", "total_rate")[:5]
+        franchiseData = SaleProfiles.objects.filter(entity_type='franchise', verified=True, subscribed=True).annotate(month=ExtractMonth("created_at")).values("month").annotate(total_rate=Sum("range_starting")).values("month", "total_rate")[:5]
         investAmount=0
         totalAmount = 0
         async for i in investorData:
