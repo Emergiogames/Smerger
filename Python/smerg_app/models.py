@@ -156,7 +156,7 @@ class SaleProfiles(models.Model):
     # Booleens
     block = models.BooleanField(default=False)
     verified = models.BooleanField(default=False) ## Admin verification
-    subcribed = models.BooleanField(default=False)
+    subscribed = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.name} ({self.entity_type})"
