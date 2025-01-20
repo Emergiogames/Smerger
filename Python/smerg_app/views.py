@@ -252,6 +252,19 @@ class ChangePwd(APIView):
 #             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
 #         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
 
+# Single Post
+class SinglePostDetails(APIView):
+    @swagger_auto_schema(operation_description="Fetch a post using id passed as query param",
+        responses={200: "Returns a serialized list of business posts.", 404: "{'status': False, 'message': 'Post does not exist'}", 400: "{'status': False, 'message': 'Token is not passed'}",},
+        manual_parameters=[openapi.Parameter('id', openapi.IN_PATH,description=" fetch posts based on id.",type=openapi.TYPE_INTEGER, required=True),])
+    async def get(self, request):
+        id = request.GET.get('id')
+        if await SaleProfiles.objects.filter(id=id).aexists():
+            post = await SaleProfiles.objects.aget(id=id)
+            serialized_data = await get_serialize_data(post, SaleProfilesSerial)
+            return Response(serialized_data)
+        return Response({'status': False, 'message': 'Post doesnot exist'}, status=status.HTTP_404_NOT_FOUND)
+
 # Business
 class BusinessList(APIView):
     @swagger_auto_schema(operation_description="Fetch business posts. If `id` is 0, fetch all business posts; otherwise, fetch posts created by the logged-in user.",
