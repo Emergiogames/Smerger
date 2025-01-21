@@ -52,7 +52,7 @@ class LoginView(APIView):
                     variables = {
                         "1": user.first_name,
                         "2": device,
-                        "3": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        "3": datetime.now().strftime("%I:%M %p").lower()
                     }
                     await sync_to_async(send_updates)(body=variables, number=user.username)
                     await user.asave()
