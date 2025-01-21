@@ -992,7 +992,7 @@ class Subscribe(APIView):
                 # if verified:
                 if await Plan.objects.filter(id=request.data.get('id')).aexists():
                     plan = await Plan.objects.aget(id=request.data.get('id'))
-                    if not await Subscription.objects.filter(user=user).aexists():
+                    if not await Subscription.objects.filter(user=user, plan__type=plan.type).aexists():
                         data = request.data
                         data['user'] = user.id
                         data['expiry_date'] = (timezone.now() + relativedelta(months=plan.time_period)).strftime('%Y-%m-%d')
@@ -1002,7 +1002,7 @@ class Subscribe(APIView):
                         if saved:
                             return Response({'status':True}, status=status.HTTP_200_OK)
                         return Response(resp)
-                    subscribe = await Subscription.objects.aget(user=user)
+                    subscribe = await Subscription.objects.aget(user=user, plan__type=plan.type)
                     subscribe.plan = plan
                     subscribe.expiry_date = (timezone.now() + relativedelta(months=plan.time_period)).date()
                     subscribe.remaining_posts = plan.post_number
