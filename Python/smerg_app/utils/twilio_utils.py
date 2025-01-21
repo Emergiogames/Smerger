@@ -28,7 +28,7 @@ def send_updates(body, number):
     message = client.messages.create(
         from_='whatsapp:+917594088814',
         to=f'whatsapp:+91{number}',
-        body=body  # Use direct body for non-template messages
+        body="AHHAHA"  # Use direct body for non-template messages
     )
     print(f"Message sent with SID: {message.sid}")
 
