@@ -49,15 +49,12 @@ class LoginView(APIView):
                     elif request.data.get('web_device') and user.web_device != request.data.get('web_device'):
                         user.web_device = request.data.get('web_device')
                         device = user.web_device
-                    body = f"Hi {user.first_name},\n\n" \
-                            f"We're notifying you of a recent login attempt to your account from the device: {device}.\n\n" \
-                            f"Timestamp: {datetime.now()}\n"
-                    body += "\nWhat to do:\n" \
-                            "  * Review recent account activity: Check your account for any unusual messages or activity.\n" \
-                            "  * Change your password immediately: If you believe this login attempt was unauthorized, change your password to a strong and unique one.\n" \
-                            "  * Enable two-factor authentication: If you haven't already, enable two-factor authentication for an extra layer of security.\n" \
-                            "  * If you believe this login attempt was unauthorized, please contact us immediately."
-                    await sync_to_async(send_updates)(body=body, number=user.username)
+                    variables = {
+                        "1": user.first_name,
+                        "2": device,
+                        "3": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    }
+                    await sync_to_async(send_updates)(body=variables, number=user.username)
                     await user.asave()
                     return Response({'status':True, 'token':token.key}, status=status.HTTP_200_OK)
                 return Response({'status':False,'message': 'User Blocked/ Account deactivated'}, status=status.HTTP_403_FORBIDDEN)
