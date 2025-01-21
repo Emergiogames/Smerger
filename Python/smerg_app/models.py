@@ -38,6 +38,8 @@ class UserProfile(AbstractUser):
     deactivate = models.BooleanField(default=False)
     deactivated_on = models.DateField(null=True, blank=True)
     verified = models.BooleanField(default=False) ## Aadhar verification
+    mobile_device = models.CharField(max_length=500, null=True, blank=True)
+    web_device = models.CharField(max_length=500, null=True, blank=True)
 
     objects = CustomUserManager()
 
