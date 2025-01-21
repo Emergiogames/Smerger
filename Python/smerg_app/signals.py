@@ -22,7 +22,7 @@ def log_model_save(sender, instance, created, **kwargs):
 
         ## Check and update subscription
         if Subscription.objects.filter(user = instance.user, plan__type = instance.entity_type.lower()).exists() and Subscription.objects.get(user = instance.user, plan__type = instance.entity_type.lower()).remaining_posts != 0:
-            instance.subcribed = False
+            instance.subscribed = False
             instance.save()
             subscribe = Subscription.objects.get(user = instance.user, plan__type = instance.entity_type.lower())
             subscribe.remaining_posts -= 1
