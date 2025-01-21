@@ -5,6 +5,7 @@ from smerg_app.models import *
 class Room(models.Model):
     first_person = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='first_person')
     second_person = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='second_person')
+    post = models.ForeignKey(SaleProfiles, on_delete=models.CASCADE, null=True, blank=True)
     last_msg = models.TextField(null=True, blank=True, db_collation='utf8mb4_unicode_ci')
     updated = models.DateTimeField(auto_now=True)
     created_date = models.DateTimeField(auto_now=True)

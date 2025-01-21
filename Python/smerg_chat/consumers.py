@@ -172,7 +172,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
             "unread_messages": unread,
             "total_unread": total_second + total_first,
-            "total_noti": Notification.objects.filter(user=self.user).exclude(read_by=self.user).count()
+            "total_noti": Notification.objects.filter(user=self.user).exclude(read_by=self.user).count(),
+            "post": room.post if room.post else None
         }
         print(room_data)
         return recieved.id, self.chat.timestamp, room_data, self.chat

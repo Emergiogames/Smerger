@@ -44,18 +44,18 @@ class Rooms(APIView):
                 enquiry = None
                 if not await Enquiries.objects.filter(user=user, post=reciever).aexists():
                     enquiry = await Enquiries.objects.acreate(user=user, post=reciever, created=timezone.now())
-                if await Room.objects.filter(Q(first_person=user, second_person=recieved_user) | Q(second_person=user, first_person=recieved_user)).aexists():
-                    room = await Room.objects.aget(Q(first_person=user, second_person=recieved_user) | Q(second_person=user, first_person=recieved_user))
+                if await Room.objects.filter(Q(first_person=user, second_person=recieved_user) | Q(second_person=user, first_person=recieved_user), post=reciever).aexists():
+                    room = await Room.objects.aget(Q(first_person=user, second_person=recieved_user) | Q(second_person=user, first_person=recieved_user), post=reciever)
                     room_id = await sync_to_async(lambda: room.id)()
                     if enquiry:
                         enquiry.room_id = room_id
                         await enquiry.asave()
                     return Response({'status':True, 'name': recieved_name, 'image':image, 'roomId': room_id})
-                room = await Room.objects.acreate(first_person=user, second_person=recieved_user, last_msg=encrypt_message("Tap to send message"))
+                room = await Room.objects.acreate(first_person=user, second_person=recieved_user, post=reciever, last_msg=encrypt_message("Tap to send message"))
                 if enquiry:
                     enquiry.room_id = room.id
                     await enquiry.asave()
-                return Response({'status':True,'name': recieved_name, 'image':image, 'roomId':room.id})
+                return Response({'status':True,'name': recieved_name, 'image':image, 'roomId':room.id, 'posts': room.post})
             return Response({'status':False,'message': 'User doesnot exist'})
         return Response({'status':False,'message': 'Token is not passed'})
 
