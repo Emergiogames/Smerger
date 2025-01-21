@@ -35,6 +35,8 @@ class Rooms(APIView):
             if exists:
                 reciever = await SaleProfiles.objects.aget(id=request.data.get('receiverId'))
                 recieved_user = await sync_to_async(lambda: reciever.user)()
+                if user == recieved_user:
+                    return Response({'status':False,'message': 'You cannot chat with yourself'},  status=status.HTTP_403_FORBIDDEN)
                 recieved_name = await sync_to_async(lambda: reciever.name)()
                 recieved_image = await sync_to_async(lambda: reciever.user.image)()
                 if recieved_image:
