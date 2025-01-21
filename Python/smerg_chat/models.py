@@ -12,9 +12,6 @@ class Room(models.Model):
     unread_messages_first = models.IntegerField(default=0)
     unread_messages_second = models.IntegerField(default=0)
 
-    class Meta:
-        unique_together = ['first_person', 'second_person']
-
 class ChatMessage(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     sended_by = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='sended')
