@@ -7,6 +7,7 @@ class RoomSerial(serializers.ModelSerializer):
     last_msg = serializers.SerializerMethodField()
     first_person = UserSerial(read_only=True)
     second_person = UserSerial(read_only=True)
+    post = SaleProfilesSerial(read_only=True)
 
     class Meta:
         model = Room
