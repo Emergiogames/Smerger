@@ -57,7 +57,7 @@ class Rooms(APIView):
                 if enquiry:
                     enquiry.room_id = room.id
                     await enquiry.asave()
-                return Response({'status':True,'name': recieved_name, 'image':image, 'roomId':room.id, 'posts': room.post})
+                return Response({'status':True,'name': recieved_name, 'image':image, 'roomId':room.id, 'post_id': room.post.id})
             return Response({'status':False,'message': 'User doesnot exist'})
         return Response({'status':False,'message': 'Token is not passed'})
 
