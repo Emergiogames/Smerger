@@ -45,10 +45,12 @@ class LoginView(APIView):
                     token = await Token.objects.aget(user=user)
                     if request.data.get('mobile_device') and user.mobile_device != request.data.get('mobile_device'):
                         user.mobile_device = request.data.get('mobile_device')
+                        device = user.mobile_device
                     elif request.data.get('web_device') and user.web_device != request.data.get('web_device'):
                         user.web_device = request.data.get('web_device')
+                        device = user.web_device
                     body = f"Hi {user.first_name},\n\n" \
-                            f"We're notifying you of a recent login attempt to your account from the device: {request.data.get('mobile_device')}.\n\n" \
+                            f"We're notifying you of a recent login attempt to your account from the device: {device}.\n\n" \
                             f"Timestamp: {datetime.now()}\n"
                     body += "\nWhat to do:\n" \
                             "  * Review recent account activity: Check your account for any unusual messages or activity.\n" \
