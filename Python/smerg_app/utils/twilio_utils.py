@@ -23,13 +23,8 @@ def send_updates(body, number):
         content_sid="HX92e22fc6c2914592aadb68ce1a875b83",
         from_='whatsapp:+917594088814',
         to=f'whatsapp:+91{number}',
-        content_variables=json.dumps(variables)
+        content_variables=json.dumps(body)
     )
-    # message = client.messages.create(
-    #     from_='whatsapp:+917594088814',
-    #     to=f'whatsapp:+91{number}',
-    #     body="AHHAHA"  # Use direct body for non-template messages
-    # )
     print(f"Message sent with SID: {message.sid}")
 
 async def twilio_int(otp, number):
