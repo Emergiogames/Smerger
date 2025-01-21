@@ -1074,21 +1074,9 @@ class Notifications(APIView):
             if exists:
                 noti = [item async for item in user.notifications.all().order_by('-id')]
                 serialized_data = await serialize_data(noti, NotiSerial)
-                asyncio.create_task(self.mark_notifications_read(noti, user))
                 return Response(serialized_data)
             return Response({'status':False, 'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False, 'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
-
-    async def mark_notifications_read(self, notifications, user):
-        await asyncio.sleep(10)
-
-        @sync_to_async
-        def update_notification(notification, user):
-            notification.read_by.add(user)
-            notification.save()
-
-        for notification in notifications:
-            await update_notification(notification, user)
 
     @swagger_auto_schema(operation_description="Read notification",
     responses={200: "Notifications Details fetched succesfully",400:"Passes an error message"})
