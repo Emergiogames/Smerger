@@ -1090,6 +1090,24 @@ class Notifications(APIView):
         for notification in notifications:
             await update_notification(notification, user)
 
+    @swagger_auto_schema(operation_description="Read notification",
+    responses={200: "Notifications Details fetched succesfully",400:"Passes an error message"})
+    async def patch(self,request):
+        if request.headers.get('token'):
+            exists, user = await check_user(request.headers.get('token'))
+            if exists:
+                @sync_to_async
+                def update_notification(notification, user):
+                    notification.read_by.add(user)
+                    notification.save()
+
+                for item in user.notifications.all():
+                    await update_notification(item, user)
+
+                return Response({'status':True}, status=status.HTTP_200_OK)
+            return Response({'status':False, 'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status':False, 'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
+
     @swagger_auto_schema(operation_description="Notification deletion",request_body=NotiSerial,
     responses={200: "{'status':True,'message': 'Notification deleted successfully'}",400:"Passes an error message"})
     async def delete(self,request,id):
