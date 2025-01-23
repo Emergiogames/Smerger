@@ -43,19 +43,21 @@ class LoginView(APIView):
             if check_password(request.data.get('password'), user.password):
                 if not user.block and not user.deactivate:
                     token = await Token.objects.aget(user=user)
+                    device = None
                     if request.data.get('mobile_device') and user.mobile_device != request.data.get('mobile_device'):
                         user.mobile_device = request.data.get('mobile_device')
                         device = user.mobile_device
                     elif request.data.get('web_device') and user.web_device != request.data.get('web_device'):
                         user.web_device = request.data.get('web_device')
                         device = user.web_device
-                    variables = {
-                        "1": user.first_name,
-                        "2": device,
-                        "3": datetime.now().strftime("%I:%M %p").lower()
-                    }
-                    await sync_to_async(send_updates)(body=variables, number=user.username)
-                    await user.asave()
+                    if device:
+                        variables = {
+                            "1": user.first_name,
+                            "2": device,
+                            "3": datetime.now().strftime("%I:%M %p").lower()
+                        }
+                        await sync_to_async(send_updates)(body=variables, number=user.username)
+                        await user.asave()
                     return Response({'status':True, 'token':token.key}, status=status.HTTP_200_OK)
                 return Response({'status':False,'message': 'User Blocked/ Account deactivated'}, status=status.HTTP_403_FORBIDDEN)
         return Response({'status':False,'message': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
