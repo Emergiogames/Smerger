@@ -711,7 +711,7 @@ class AdminPostVerification(APIView):
     def get(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
-                pending_posts = SaleProfiles.objects.filter(verified=False, block=False)
+                pending_posts = SaleProfiles.objects.filter(verified=False, block=False).order_by('id')
         serializer = SaleProfilesSerial(pending_posts, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
