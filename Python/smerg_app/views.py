@@ -1093,7 +1093,7 @@ class Notifications(APIView):
                         item.read_by.add(user)
                         item.save()
 
-                    await update_notification(user)
+                await update_notification(user)
 
                 return Response({'status':True}, status=status.HTTP_200_OK)
             return Response({'status':False, 'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
