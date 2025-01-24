@@ -357,16 +357,10 @@ class Banners(APIView):
     def get(self,request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
-                banner_type = request.GET.get('type')
-                if 'type' not in request.GET:
+                if not request.GET.get('type'):
                     serializer = BannerSerial(Banner.objects.filter(validity_date__gte=timezone.now()).order_by('-id'), many=True)
                 else:
-                    banners = Banner.objects.filter(validity_date__gte=timezone.now())
-                    if banner_type != 'all':
-                        banners = banners.filter(type=banner_type)
-                    all_banners = Banner.objects.filter(validity_date__gte=timezone.now())
-                    banners = banners | all_banners 
-
+                    banners = Banner.objects.filter(validity_date__gte=timezone.now(), type=request.GET.get('type'))
                     serializer = BannerSerial(banners.order_by('-id'), many=True)
                 return Response(serializer.data)
             return Response({'status':False,'message': 'User doesnot exist'})

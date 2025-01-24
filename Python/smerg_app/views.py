@@ -950,9 +950,9 @@ class Banners(APIView):
     responses={200: "Banner Details fetched succesfully",400:"Passes an error message"})
     async def get(self,request):
         if not request.GET.get('type'):
-            banners = [banner async for banner in Banner.objects.all().order_by('-id')[:5]]
+            banners = [banner async for banner in Banner.objects.filter(validity_date__gte=timezone.now()).order_by('-id')[:5]]
         else:
-            banners = [banner async for banner in Banner.objects.filter(type=request.GET.get('type')).order_by('-id')[:5]]
+            banners = [banner async for banner in Banner.objects.filter(type=request.GET.get('type'), validity_date__gte=timezone.now()).order_by('-id')[:5]]
         serialized_data = await serialize_data(banners, BannerSerial)
         return Response(serialized_data)
 # Plans
