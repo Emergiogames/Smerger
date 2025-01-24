@@ -288,7 +288,7 @@ class Blocked(APIView):
     def post(self,request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
-                profile = UserProfile.objects.get(id = request.data.get('userId'))
+                profile = UserProfile.objects.get(id = request.data.get('id'))
                 if profile.block:
                     profile.block = False
                     message = "Successfully unblocked"
