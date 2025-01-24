@@ -57,7 +57,7 @@ def notify_update(sender, instance, action, **kwargs):
             )
             total_second = Room.objects.filter(second_person=user, unread_messages_second__gt=0).count()
             total_first = Room.objects.filter(first_person=user, unread_messages_first__gt=0).count()
-            room_group_name =  f'user_{self.user.id}'
+            room_group_name =  f'user_{user.id}'
             async_to_sync(channel_layer.group_send)(
                 room_group_name,
                 {
