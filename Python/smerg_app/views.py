@@ -538,7 +538,7 @@ class AdvisorList(APIView):
                 state = data.get('state', '...')
                 data['title'] = f"{data.get('designation', 'Advisor')}, Financial Advisor, {data.get('city', '...')}, {data.get('state', '...')}"
                 data['single_desc'] = f'Advisor in {data.get("city", "...")}, {data.get("state", "...")}'
-                subscribed = await check_subscription(user, "franchise")
+                subscribed = await check_subscription(user, "advisor")
                 if subscribed:
                     data['subscribed'] = True
                 saved, resp = await create_serial(SaleProfilesSerial, data)
