@@ -1086,13 +1086,14 @@ class Notifications(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                @sync_to_async
-                def update_notification(notification, user):
-                    notification.read_by.add(user)
-                    notification.save()
 
-                for item in user.notifications.all():
-                    await update_notification(item, user)
+                @sync_to_async
+                def update_notification(user):
+                    for item in user.notifications.all():
+                        item.read_by.add(user)
+                        item.save()
+
+                    await update_notification(user)
 
                 return Response({'status':True}, status=status.HTTP_200_OK)
             return Response({'status':False, 'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
