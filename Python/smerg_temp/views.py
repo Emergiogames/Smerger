@@ -59,7 +59,7 @@ class UserView(APIView):
 class BusinessView(APIView):
     @swagger_auto_schema(operation_description="Business fetching",
     responses={200: "Business Details fetched succesfully",400:"Passes an error message"})
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
                 serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='business').order_by('-id'), many=True)
@@ -118,7 +118,7 @@ class BusinessView(APIView):
 class AdvisorView(APIView):
     @swagger_auto_schema(operation_description="Advisor fetching",
     responses={200: "Advisor Details fetched succesfully",400:"Passes an error message"})
-    def get(self, request,args,*kw):
+    def get(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
                 serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='advisor').order_by('-id'), many=True)
@@ -173,7 +173,7 @@ class AdvisorView(APIView):
 class InvestorView(APIView):
     @swagger_auto_schema(operation_description="Investor fetching",
     responses={200: "Investor Details fetched succesfully",400:"Passes an error message"})
-    def get(self, request,args,*kw):
+    def get(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
                 serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='investor').order_by('-id'), many=True)
@@ -228,7 +228,7 @@ class InvestorView(APIView):
 class FranchiseView(APIView):
     @swagger_auto_schema(operation_description="Franchise fetching",
     responses={200: "Franchise Details fetched succesfully",400:"Passes an error message"})
-    def get(self, request,args,*kw):
+    def get(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
                 serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='franchise').order_by('-id'), many=True)
