@@ -1280,18 +1280,18 @@ class ReportPost(APIView):
                         reason = request.data.get('reason')
 
                     # Check if the post is reporting
-                    if request.data.get('type') == "post" and await SaleProfiles.objects.filter(id=request.data.get('id')).aexists():
+                    if await SaleProfiles.objects.filter(id=request.data.get('id')).aexists():
                         report_post = await SaleProfiles.objects.aget(id=request.data.get('id'))
                         report = Report(report_post=report_post, reason=reason, reason_type=request.data.get('reason_type'), reported_by=user, report_type='post')
                         await report.asave()
                         return Response({'status': True, 'message': 'Post reported successfully'}, status=status.HTTP_200_OK)
 
-                    # Check if the profile is reporting
-                    elif await Profile.objects.filter(id=request.data.get('id')).aexists():
-                        reported_profile = await Profile.objects.aget(id=request.data.get('id'))
-                        report = Report(reported_profile=reported_profile, reason=reason, reason_type=request.data.get('reason_type'), reported_by=user, report_type='profile')
-                        await report.asave()
-                        return Response({'status': True, 'message': 'Profile reported successfully'}, status=status.HTTP_200_OK)
+                    # # Check if the profile is reporting
+                    # elif await Profile.objects.filter(id=request.data.get('id')).aexists():
+                    #     reported_profile = await Profile.objects.aget(id=request.data.get('id'))
+                    #     report = Report(reported_profile=reported_profile, reason=reason, reason_type=request.data.get('reason_type'), reported_by=user, report_type='profile')
+                    #     await report.asave()
+                    #     return Response({'status': True, 'message': 'Profile reported successfully'}, status=status.HTTP_200_OK)
                 return Response({'status': False, 'message': 'Invalid ID, reason, type(Post or Profile) or reason type'}, status=status.HTTP_400_BAD_REQUEST)
             return Response({'status':False,'message': 'User doesnot exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status':False,'message': 'Token is not passed'}, status=status.HTTP_401_UNAUTHORIZED)
