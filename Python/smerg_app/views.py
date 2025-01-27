@@ -1274,7 +1274,7 @@ class ReportPost(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                if request.data.get('id') or request.data.get('reason_type') or request.data.get('type'):
+                if request.data.get('id') or request.data.get('reason_type'):
                     reason = None
                     if request.data.get('reason'):
                         reason = request.data.get('reason')
