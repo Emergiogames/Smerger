@@ -288,15 +288,26 @@ class Blocked(APIView):
     def post(self,request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
-                profile = UserProfile.objects.get(id = request.data.get('id'))
-                if profile.block:
-                    profile.block = False
-                    message = "Successfully unblocked"
-                else:
-                    profile.block = True
-                    message = "Successfully blocked"
-                profile.save()
-                return Response({'status':True,'message':message})
+                if request.data.get("type") == "profile" UserProfile.objects.filter(id = request.data.get('id')).exists():
+                    profile = UserProfile.objects.get(id = request.data.get('id'))
+                    if profile.block:
+                        profile.block = False
+                        message = "Successfully unblocked"
+                    else:
+                        profile.block = True
+                        message = "Successfully blocked"
+                    profile.save()
+                    return Response({'status':True,'message':message})
+                elif request.data.get("type") == "post" and SaleProfiles.objects.filter(id=request.data.get('id')).exists():
+                    profile = SaleProfiles.objects.get(id=request.data.get('id'))
+                    if profile.block:
+                        profile.block = False
+                        message = "Successfully unblocked"
+                    else:
+                        profile.block = True
+                        message = "Successfully blocked"
+                    profile.save()
+                    return Response({'status':True,'message':message})
             return Response({'status':False,'message': 'User does not exist'})
         return Response({'status':False,'message': 'Token is not passed'})
 
