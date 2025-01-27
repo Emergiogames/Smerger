@@ -1274,18 +1274,22 @@ class ReportPost(APIView):
         if request.headers.get('token'):
             exists, user = await check_user(request.headers.get('token'))
             if exists:
-                if request.data.get('id') or request.data.get('reason') or request.data.get('reason_type') or request.data.get('type'):
+                if request.data.get('id') or request.data.get('reason_type') or request.data.get('type'):
+                    reason = None
+                    if request.data.get('reason'):
+                        reason = request.data.get('reason')
+
                     # Check if the post is reporting
                     if request.data.get('type') == "post" and await SaleProfiles.objects.filter(id=request.data.get('id')).aexists():
                         report_post = await SaleProfiles.objects.aget(id=request.data.get('id'))
-                        report = Report(report_post=report_post, reason=request.data.get('reason'), reason_type=request.data.get('reason_type'), reported_by=user, report_type='post')
+                        report = Report(report_post=report_post, reason=reason, reason_type=request.data.get('reason_type'), reported_by=user, report_type='post')
                         await report.asave()
                         return Response({'status': True, 'message': 'Post reported successfully'}, status=status.HTTP_200_OK)
 
                     # Check if the profile is reporting
                     elif await Profile.objects.filter(id=request.data.get('id')).aexists():
                         reported_profile = await Profile.objects.aget(id=request.data.get('id'))
-                        report = Report(reported_profile=reported_profile, reason=request.data.get('reason'), reason_type=request.data.get('reason_type'), reported_by=user, report_type='profile')
+                        report = Report(reported_profile=reported_profile, reason=reason, reason_type=request.data.get('reason_type'), reported_by=user, report_type='profile')
                         await report.asave()
                         return Response({'status': True, 'message': 'Profile reported successfully'}, status=status.HTTP_200_OK)
                 return Response({'status': False, 'message': 'Invalid ID, reason, type(Post or Profile) or reason type'}, status=status.HTTP_400_BAD_REQUEST)

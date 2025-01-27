@@ -324,7 +324,7 @@ class Report(models.Model):
 
     report_post = models.ForeignKey(SaleProfiles, on_delete=models.CASCADE, null=True, blank=True)
     reported_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True, related_name='userprofile_reported')
-    reason = models.TextField()
+    reason = models.TextField(null=True, blank=True)
     reason_type = models.CharField(max_length=255)
     reported_by = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     report_type = models.CharField(max_length=10, choices=REPORT_TYPE_CHOICES)  # Add choices for report type

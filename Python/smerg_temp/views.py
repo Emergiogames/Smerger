@@ -468,7 +468,7 @@ class AdminReportView(APIView):
 
         reports = Report.objects.all()
         if not reports.exists():
-            return Response({'status': False, 'message': 'No reports found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'status': True, 'data': []}, status=status.HTTP_200_OK)
 
         serializer = ReportSerial(reports, many=True)
         return Response({'status': True, 'data': serializer.data}, status=status.HTTP_200_OK)
