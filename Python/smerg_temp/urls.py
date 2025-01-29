@@ -16,6 +16,7 @@ urlpatterns = [
     path('plans',Plans.as_view()),
     path('plans/<int:id>',Plans.as_view()),
     path('banner',Banners.as_view()),
+    path('banner<int:id>',Banners.as_view()),
     path('notification',Notifications.as_view()),
     path('report',AdminReportView.as_view()),
     path('dashboard',DashboardView.as_view()),

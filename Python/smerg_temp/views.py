@@ -354,8 +354,8 @@ class Plans(APIView):
     def delete(self,request,id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
-                banner = Plan.objects.get(id=id)
-                banner.delete()
+                plan = Plan.objects.get(id=id)
+                plan.delete()
                 return Response({'status':True})
             return Response({'status':False,'message': 'User does not exist'})
         return Response({'status':False,'message': 'Token is not passed'})
