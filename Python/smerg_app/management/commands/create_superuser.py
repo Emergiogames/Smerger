@@ -19,6 +19,8 @@ class Command(BaseCommand):
                 email=email,
                 password=password,
                 onesignal_id='',
+                first_name="Investryx",
+                image="https://investryx.com/images/white_emergio_inv.svg",
                 block=False
             )
             token = Token.objects.create(user=user)

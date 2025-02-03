@@ -59,7 +59,7 @@ class UserView(APIView):
 class BusinessView(APIView):
     @swagger_auto_schema(operation_description="Business fetching",
     responses={200: "Business Details fetched succesfully",400:"Passes an error message"})
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
                 serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='business').order_by('-id'), many=True)
@@ -118,7 +118,7 @@ class BusinessView(APIView):
 class AdvisorView(APIView):
     @swagger_auto_schema(operation_description="Advisor fetching",
     responses={200: "Advisor Details fetched succesfully",400:"Passes an error message"})
-    def get(self, request,args,*kw):
+    def get(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
                 serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='advisor').order_by('-id'), many=True)
@@ -173,7 +173,7 @@ class AdvisorView(APIView):
 class InvestorView(APIView):
     @swagger_auto_schema(operation_description="Investor fetching",
     responses={200: "Investor Details fetched succesfully",400:"Passes an error message"})
-    def get(self, request,args,*kw):
+    def get(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
                 serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='investor').order_by('-id'), many=True)
@@ -228,7 +228,7 @@ class InvestorView(APIView):
 class FranchiseView(APIView):
     @swagger_auto_schema(operation_description="Franchise fetching",
     responses={200: "Franchise Details fetched succesfully",400:"Passes an error message"})
-    def get(self, request,args,*kw):
+    def get(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
                 serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='franchise').order_by('-id'), many=True)
@@ -288,15 +288,26 @@ class Blocked(APIView):
     def post(self,request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
-                profile = UserProfile.objects.get(id = request.data.get('userId'))
-                if profile.block:
-                    profile.block = False
-                    message = "Successfully unblocked"
-                else:
-                    profile.block = True
-                    message = "Successfully blocked"
-                profile.save()
-                return Response({'status':True,'message':message})
+                if request.data.get("type") == "profile" and UserProfile.objects.filter(id = request.data.get('id')).exists():
+                    profile = UserProfile.objects.get(id = request.data.get('id'))
+                    if profile.block:
+                        profile.block = False
+                        message = "Successfully unblocked"
+                    else:
+                        profile.block = True
+                        message = "Successfully blocked"
+                    profile.save()
+                    return Response({'status':True,'message':message})
+                elif request.data.get("type") == "post" and SaleProfiles.objects.filter(id=request.data.get('id')).exists():
+                    profile = SaleProfiles.objects.get(id=request.data.get('id'))
+                    if profile.block:
+                        profile.block = False
+                        message = "Successfully unblocked"
+                    else:
+                        profile.block = True
+                        message = "Successfully blocked"
+                    profile.save()
+                    return Response({'status':True,'message':message})
             return Response({'status':False,'message': 'User does not exist'})
         return Response({'status':False,'message': 'Token is not passed'})
 
@@ -343,8 +354,8 @@ class Plans(APIView):
     def delete(self,request,id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
-                banner = Plan.objects.get(id=id)
-                banner.delete()
+                plan = Plan.objects.get(id=id)
+                plan.delete()
                 return Response({'status':True})
             return Response({'status':False,'message': 'User does not exist'})
         return Response({'status':False,'message': 'Token is not passed'})
@@ -357,16 +368,10 @@ class Banners(APIView):
     def get(self,request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
-                banner_type = request.GET.get('type')
-                if 'type' not in request.GET:
+                if not request.GET.get('type'):
                     serializer = BannerSerial(Banner.objects.filter(validity_date__gte=timezone.now()).order_by('-id'), many=True)
                 else:
-                    banners = Banner.objects.filter(validity_date__gte=timezone.now())
-                    if banner_type != 'all':
-                        banners = banners.filter(type=banner_type)
-                    all_banners = Banner.objects.filter(validity_date__gte=timezone.now())
-                    banners = banners | all_banners 
-
+                    banners = Banner.objects.filter(validity_date__gte=timezone.now(), type=request.GET.get('type'))
                     serializer = BannerSerial(banners.order_by('-id'), many=True)
                 return Response(serializer.data)
             return Response({'status':False,'message': 'User doesnot exist'})
@@ -432,12 +437,13 @@ class Notifications(APIView):
                 if mutable_data.get('userId') != "all":
                     user = UserProfile.objects.get(id=mutable_data.get('userId'))
                     mutable_data['user'] = user.id
+                else:
+                    users = UserProfile.objects.all()
+                    mutable_data['user'] = users.first().id
                 serializer = NotiSerial(data = mutable_data)
                 if serializer.is_valid():
                     noti = serializer.save()
-                    if mutable_data.get('userId') == "all":
-                        users = UserProfile.objects.all()
-                        noti.user.set(users)
+                    noti.user.set(users)
                     return Response({'status':True})
                 return Response(serializer.errors)
             return Response({'status':False,'message': 'User doesnot exist'})
@@ -473,7 +479,7 @@ class AdminReportView(APIView):
 
         reports = Report.objects.all()
         if not reports.exists():
-            return Response({'status': False, 'message': 'No reports found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'status': True, 'data': []}, status=status.HTTP_200_OK)
 
         serializer = ReportSerial(reports, many=True)
         return Response({'status': True, 'data': serializer.data}, status=status.HTTP_200_OK)
@@ -710,7 +716,7 @@ class AdminPostVerification(APIView):
     def get(self, request):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and UserProfile.objects.get(auth_token=request.headers.get('token')).is_superuser:
-                pending_posts = SaleProfiles.objects.filter(verified=False, block=False)
+                pending_posts = SaleProfiles.objects.filter(verified=False, block=False).order_by('-id')
         serializer = SaleProfilesSerial(pending_posts, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

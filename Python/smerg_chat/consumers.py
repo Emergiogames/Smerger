@@ -162,17 +162,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'id': room.id,
             'first_person': room.first_person.id,
             'first_name': room.first_person.first_name,
-            'first_image': room.first_person.image.url if room.first_person.image else None,
+            'first_image': room.post.image.url if room.post.image else None,
             'second_person': room.second_person.id,
             'second_name': room.second_person.first_name,
-            'second_image': room.second_person.image.url if room.second_person.image else None,
+            'second_image': room.post.image.url if room.post.image else None,
             'last_msg': decrypt_message(room.last_msg) if room.last_msg else '',
             'updated': localtime(room.updated).strftime('%Y-%m-%d %H:%M:%S'),
             'active': recieved.is_active,
             'last_seen': recieved.inactive_from.strftime('%Y-%m-%d %H:%M:%S') if recieved.inactive_from else None,
             "unread_messages": unread,
             "total_unread": total_second + total_first,
-            "total_noti": Notification.objects.filter(user=self.user).exclude(read_by=self.user).count()
+            "total_noti": Notification.objects.filter(user=self.user).exclude(read_by=self.user).count(),
+            # "post": room.post if room.post else None
         }
         print(room_data)
         return recieved.id, self.chat.timestamp, room_data, self.chat

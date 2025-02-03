@@ -38,6 +38,8 @@ class UserProfile(AbstractUser):
     deactivate = models.BooleanField(default=False)
     deactivated_on = models.DateField(null=True, blank=True)
     verified = models.BooleanField(default=False) ## Aadhar verification
+    mobile_device = models.CharField(max_length=500, null=True, blank=True)
+    web_device = models.CharField(max_length=500, null=True, blank=True)
 
     objects = CustomUserManager()
 
@@ -156,7 +158,7 @@ class SaleProfiles(models.Model):
     # Booleens
     block = models.BooleanField(default=False)
     verified = models.BooleanField(default=False) ## Admin verification
-    subcribed = models.BooleanField(default=False)
+    subscribed = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.name} ({self.entity_type})"
@@ -290,7 +292,7 @@ class Notification(models.Model):
     description = models.TextField()    
     image = models.FileField(storage=MediaStorage(),upload_to='notification/image',null=True,blank=True)
     url = models.URLField(max_length=200,null=True,blank=True)
-    created_on = models.DateField(auto_now=True)
+    created_on = models.DateTimeField(auto_now=True)
     read_by = models.ManyToManyField(UserProfile, related_name='read_notifications', blank=True)
 
 # For Popular searched items and recently Searched items
@@ -322,7 +324,7 @@ class Report(models.Model):
 
     report_post = models.ForeignKey(SaleProfiles, on_delete=models.CASCADE, null=True, blank=True)
     reported_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True, related_name='userprofile_reported')
-    reason = models.TextField()
+    reason = models.TextField(null=True, blank=True)
     reason_type = models.CharField(max_length=255)
     reported_by = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     report_type = models.CharField(max_length=10, choices=REPORT_TYPE_CHOICES)  # Add choices for report type

@@ -7,7 +7,6 @@ from asgiref.sync import async_to_sync
 from django.http import JsonResponse
 from django.views import View
 
-# This is your original synchronous Twilio function
 def send_twilio_message(otp, number):
     client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
     message = client.messages.create(
@@ -15,6 +14,16 @@ def send_twilio_message(otp, number):
         from_='whatsapp:+917594088814',
         to=f'whatsapp:+91{number}',
         content_variables=json.dumps({"1": str(otp)}),
+    )
+    print(f"Message sent with SID: {message.sid}")
+
+def send_updates(body, number):
+    client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+    message = client.messages.create(
+        content_sid="HX92e22fc6c2914592aadb68ce1a875b83",
+        from_='whatsapp:+917594088814',
+        to=f'whatsapp:+91{number}',
+        content_variables=json.dumps(body)
     )
     print(f"Message sent with SID: {message.sid}")
 

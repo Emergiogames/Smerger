@@ -35,6 +35,8 @@ class Rooms(APIView):
             if exists:
                 reciever = await SaleProfiles.objects.aget(id=request.data.get('receiverId'))
                 recieved_user = await sync_to_async(lambda: reciever.user)()
+                if user == recieved_user:
+                    return Response({'status':False,'message': 'You cannot chat with yourself'},  status=status.HTTP_403_FORBIDDEN)
                 recieved_name = await sync_to_async(lambda: reciever.name)()
                 recieved_image = await sync_to_async(lambda: reciever.user.image)()
                 if recieved_image:
@@ -44,18 +46,18 @@ class Rooms(APIView):
                 enquiry = None
                 if not await Enquiries.objects.filter(user=user, post=reciever).aexists():
                     enquiry = await Enquiries.objects.acreate(user=user, post=reciever, created=timezone.now())
-                if await Room.objects.filter(Q(first_person=user, second_person=recieved_user) | Q(second_person=user, first_person=recieved_user)).aexists():
-                    room = await Room.objects.aget(Q(first_person=user, second_person=recieved_user) | Q(second_person=user, first_person=recieved_user))
+                if await Room.objects.filter(Q(first_person=user, second_person=recieved_user) | Q(second_person=user, first_person=recieved_user), post=reciever).aexists():
+                    room = await Room.objects.aget(Q(first_person=user, second_person=recieved_user) | Q(second_person=user, first_person=recieved_user), post=reciever)
                     room_id = await sync_to_async(lambda: room.id)()
                     if enquiry:
                         enquiry.room_id = room_id
                         await enquiry.asave()
-                    return Response({'status':True, 'name': recieved_name, 'image':image, 'roomId': room_id})
-                room = await Room.objects.acreate(first_person=user, second_person=recieved_user, last_msg=encrypt_message("Tap to send message"))
+                    return Response({'status':True, 'name': recieved_name, 'image':image, 'roomId': room_id, 'post': {"id": reciever.id, "title": reciever.title, "image": reciever.user.image.url}})
+                room = await Room.objects.acreate(first_person=user, second_person=recieved_user, post=reciever, last_msg=encrypt_message("Tap to send message"))
                 if enquiry:
                     enquiry.room_id = room.id
                     await enquiry.asave()
-                return Response({'status':True,'name': recieved_name, 'image':image, 'roomId':room.id})
+                return Response({'status':True,'name': recieved_name, 'image':image, 'roomId':room.id, 'post': {"id": reciever.id, "title": reciever.title, "image": reciever.user.image.url}})
             return Response({'status':False,'message': 'User doesnot exist'})
         return Response({'status':False,'message': 'Token is not passed'})
 

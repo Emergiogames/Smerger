@@ -55,6 +55,41 @@ def notify_update(sender, instance, action, **kwargs):
                     }
                 }
             )
+            total_second = Room.objects.filter(second_person=user, unread_messages_second__gt=0).count()
+            total_first = Room.objects.filter(first_person=user, unread_messages_first__gt=0).count()
+            room_group_name =  f'user_{user.id}'
+            async_to_sync(channel_layer.group_send)(
+                room_group_name,
+                {
+                    'type': 'room_message',
+                    'room_data': {
+                        "total_unread": total_first + total_second,
+                        "total_noti": Notification.objects.filter(user=user).exclude(read_by=user).count()
+                    }
+                })
+
+@receiver(m2m_changed, sender=Notification.read_by.through)
+def read_update(sender, instance, action, **kwargs):
+    channel_layer = get_channel_layer()
+    users = instance.user.all()
+    if not users.exists():
+        print("No users found for notification")
+        return
+    print(users)
+    for user in users:
+        print(user, user.id)
+        total_second = Room.objects.filter(second_person=user, unread_messages_second__gt=0).count()
+        total_first = Room.objects.filter(first_person=user, unread_messages_first__gt=0).count()
+        room_group_name =  f'user_{user.id}'
+        async_to_sync(channel_layer.group_send)(
+            room_group_name,
+            {
+                'type': 'room_message',
+                'room_data': {
+                    "total_unread": total_first + total_second,
+                    "total_noti": Notification.objects.filter(user=user).exclude(read_by=user).count()
+                }
+            })
 
 @receiver(post_save, sender=ChatMessage)
 def send_noti(sender, instance, created, **kwargs):

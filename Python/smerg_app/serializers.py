@@ -89,7 +89,7 @@ class ActivitySerial(serializers.ModelSerializer):
         fields = '__all__'
 
 class ReportSerial(serializers.ModelSerializer):
-    id = serializers.IntegerField(read_only=True)
+    report_post = SaleProfilesSerial()
 
     class Meta:
         model = Report
