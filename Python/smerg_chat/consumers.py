@@ -160,13 +160,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         total_first = Room.objects.filter(first_person=self.user, unread_messages_first__gt=0).count()
         room_data = {
             'id': room.id,
-            'sender_id': self.user.id,
+            'sender_id': self.user.id,  
             'first_person': room.first_person.id,
             'first_name': room.first_person.first_name,
-            'first_image': room.post.image.url if room.post.image else None,
+            'first_image': room.post.image1.url if room.post.image1 else None,
             'second_person': room.second_person.id,
             'second_name': room.second_person.first_name,
-            'second_image': room.post.image.url if room.post.image else None,
+            'second_image': room.post.image1.url if room.post.image1 else None,
             'last_msg': decrypt_message(room.last_msg) if room.last_msg else '',
             'updated': localtime(room.updated).strftime('%Y-%m-%d %H:%M:%S'),
             'active': recieved.is_active,
