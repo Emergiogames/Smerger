@@ -31,5 +31,5 @@ class ChatSerial(serializers.ModelSerializer):
         if not isinstance(decrypted_message, str):
             decoded_message = decrypted_message.decode('utf-8')
         else:
-            decoded_message = decrypt_message
+            decoded_message = decrypted_message
         return decoded_message
