@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import *
 from smerg_app.serializers import *
 from .utils.enc_utils import decrypt_message
+from html import unescape
 
 class RoomSerial(serializers.ModelSerializer):
     last_msg = serializers.SerializerMethodField()
@@ -26,4 +27,6 @@ class ChatSerial(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_message(self, obj):
-        return decrypt_message(obj.message)
+        decrypted_message = decrypt_message(obj.message)
+        decoded_message = unescape(decrypted_message)
+        return decoded_message

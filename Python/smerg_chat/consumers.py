@@ -72,8 +72,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'roomId': data.get('roomId'),
             'token': data.get('token'),
             'sendedTo': recieved,
-            'duration': data.get('duration') if data.get('duration') else None,
             'sendedBy': self.user.id,
+            'duration': data.get('duration') if data.get('duration') else None,
             'time': str(created),
             'seen':self.chat.seen
         }
