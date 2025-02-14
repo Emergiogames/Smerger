@@ -28,8 +28,8 @@ class ChatSerial(serializers.ModelSerializer):
 
     def get_message(self, obj):
         decrypted_message = decrypt_message(obj.message)
-        if not isinstance(decrypted_message, str):
+        if isinstance(decrypted_message, bytes):
             decoded_message = decrypted_message.decode('utf-8')
-        else:
-            decoded_message = decrypted_message
-        return decoded_message
+            print(decoded_message)
+            return decoded_message
+        return decrypted_message
